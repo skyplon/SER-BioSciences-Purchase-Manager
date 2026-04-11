@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Gestor de Facturas Finca"
+version = "1.0.0"
+id = "artifacts/finca-facturas"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20546
+
+[services.development]
+run = "pnpm --filter @workspace/finca-facturas run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/finca-facturas", "run", "build" ]
+publicDir = "artifacts/finca-facturas/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20546"
+BASE_PATH = "/"

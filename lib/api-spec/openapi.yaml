@@ -3,13 +3,17 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API specification for Gestor de Facturas Finca
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: invoices
+    description: Invoice management operations
+  - name: ocr
+    description: OCR and AI extraction operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,183 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [invoices]
+      summary: List all invoices
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: supplier
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+    post:
+      operationId: createInvoice
+      tags: [invoices]
+      summary: Create a new invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceBody"
+      responses:
+        "201":
+          description: Created invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/summary:
+    get:
+      operationId: getInvoiceSummary
+      tags: [invoices]
+      summary: Get summary statistics for invoices
+      responses:
+        "200":
+          description: Invoice summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceSummary"
+
+  /invoices/export:
+    get:
+      operationId: exportInvoices
+      tags: [invoices]
+      summary: Export invoices as Excel file
+      responses:
+        "200":
+          description: Excel file as base64
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportResponse"
+
+  /invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [invoices]
+      summary: Get a single invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateInvoice
+      tags: [invoices]
+      summary: Update an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInvoiceBody"
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteInvoice
+      tags: [invoices]
+      summary: Delete an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /invoices/{id}/items:
+    get:
+      operationId: listInvoiceItems
+      tags: [invoices]
+      summary: List items for a specific invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of invoice items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvoiceItem"
+
+  /ocr/extract:
+    post:
+      operationId: extractInvoiceData
+      tags: [ocr]
+      summary: Extract invoice data from image using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractInvoiceBody"
+      responses:
+        "200":
+          description: Extracted invoice data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractedInvoiceData"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +215,231 @@ components:
       required:
         - status
 
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: integer
+        invoiceNumber:
+          type: ["string", "null"]
+        supplier:
+          type: string
+        date:
+          type: ["string", "null"]
+        category:
+          type: string
+        totalAmount:
+          type: ["number", "null"]
+        imageBase64:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceItem"
+      required:
+        - id
+        - supplier
+        - category
+        - createdAt
+        - updatedAt
+        - items
+
+    InvoiceItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        invoiceId:
+          type: integer
+        description:
+          type: string
+        quantity:
+          type: ["number", "null"]
+        unit:
+          type: ["string", "null"]
+        unitPrice:
+          type: ["number", "null"]
+        totalPrice:
+          type: ["number", "null"]
+      required:
+        - id
+        - invoiceId
+        - description
+
+    CreateInvoiceBody:
+      type: object
+      properties:
+        invoiceNumber:
+          type: ["string", "null"]
+        supplier:
+          type: string
+        date:
+          type: ["string", "null"]
+        category:
+          type: string
+        totalAmount:
+          type: ["number", "null"]
+        imageBase64:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateInvoiceItemBody"
+      required:
+        - supplier
+        - category
+
+    CreateInvoiceItemBody:
+      type: object
+      properties:
+        description:
+          type: string
+        quantity:
+          type: ["number", "null"]
+        unit:
+          type: ["string", "null"]
+        unitPrice:
+          type: ["number", "null"]
+        totalPrice:
+          type: ["number", "null"]
+      required:
+        - description
+
+    UpdateInvoiceBody:
+      type: object
+      properties:
+        invoiceNumber:
+          type: ["string", "null"]
+        supplier:
+          type: string
+        date:
+          type: ["string", "null"]
+        category:
+          type: string
+        totalAmount:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateInvoiceItemBody"
+
+    InvoiceSummary:
+      type: object
+      properties:
+        totalInvoices:
+          type: integer
+        totalAmount:
+          type: number
+        byCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategorySummary"
+        bySupplier:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierSummary"
+        recentInvoices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Invoice"
+      required:
+        - totalInvoices
+        - totalAmount
+        - byCategory
+        - bySupplier
+        - recentInvoices
+
+    CategorySummary:
+      type: object
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+        total:
+          type: number
+      required:
+        - category
+        - count
+        - total
+
+    SupplierSummary:
+      type: object
+      properties:
+        supplier:
+          type: string
+        count:
+          type: integer
+        total:
+          type: number
+      required:
+        - supplier
+        - count
+        - total
+
+    ExportResponse:
+      type: object
+      properties:
+        fileBase64:
+          type: string
+        filename:
+          type: string
+      required:
+        - fileBase64
+        - filename
+
+    ExtractInvoiceBody:
+      type: object
+      properties:
+        imageBase64:
+          type: string
+      required:
+        - imageBase64
+
+    ExtractedInvoiceData:
+      type: object
+      properties:
+        invoiceNumber:
+          type: ["string", "null"]
+        supplier:
+          type: ["string", "null"]
+        date:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        totalAmount:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractedInvoiceItem"
+      required:
+        - items
+
+    ExtractedInvoiceItem:
+      type: object
+      properties:
+        description:
+          type: string
+        quantity:
+          type: ["number", "null"]
+        unit:
+          type: ["string", "null"]
+        unitPrice:
+          type: ["number", "null"]
+        totalPrice:
+          type: ["number", "null"]
+      required:
+        - description
