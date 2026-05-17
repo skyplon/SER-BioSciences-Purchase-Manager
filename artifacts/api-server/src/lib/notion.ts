@@ -32,6 +32,79 @@ export interface NotionInvoice {
   items: NotionInvoiceItem[];
 }
 
+async function queryItemsByTitle(title: string): Promise<Array<{ id: string; relations: Array<{ id: string }> }>> {
+  const res = await fetch(`https://api.notion.com/v1/databases/${ITEMS_DB_ID}/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${NOTION_API_KEY}`,
+      "Notion-Version": "2022-06-28",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      filter: { property: "Artículos", title: { equals: title } },
+      page_size: 1,
+    }),
+  });
+  if (!res.ok) throw new Error(`Notion DB query failed: ${res.status}`);
+  const data = (await res.json()) as {
+    results: Array<{
+      id: string;
+      properties: Record<string, { relation?: Array<{ id: string }> }>;
+    }>;
+  };
+  return data.results.map((p) => ({
+    id: p.id,
+    relations: p.properties["Proveedor"]?.relation ?? [],
+  }));
+}
+
+async function syncItemToNotion(
+  notion: Client,
+  item: NotionInvoiceItem,
+  facturaPageId: string
+): Promise<void> {
+  const existing = await queryItemsByTitle(item.description);
+
+  if (existing.length > 0) {
+    const { id: pageId, relations: currentRelations } = existing[0];
+    const alreadyLinked = currentRelations.some((r) => r.id === facturaPageId);
+    if (!alreadyLinked) {
+      await notion.pages.update({
+        page_id: pageId,
+        properties: {
+          "Proveedor": {
+            relation: [...currentRelations, { id: facturaPageId }],
+          },
+        },
+      });
+    }
+  } else {
+    await notion.pages.create({
+      parent: { database_id: ITEMS_DB_ID! },
+      properties: {
+        "Artículos": {
+          title: [{ text: { content: item.description } }],
+        },
+        "Proveedor": {
+          relation: [{ id: facturaPageId }],
+        },
+        "Cantidad": {
+          number: item.quantity ?? 0,
+        },
+        "Unidad": {
+          rich_text: [{ text: { content: item.unit ?? "" } }],
+        },
+        "Precio Unitario": {
+          number: item.unitPrice ?? 0,
+        },
+        "Total Ítem": {
+          number: item.totalPrice ?? 0,
+        },
+      },
+    });
+  }
+}
+
 export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void> {
   if (!NOTION_API_KEY || !FACTURAS_DB_ID || !ITEMS_DB_ID) {
     throw new Error("Notion no está completamente configurado (API key o IDs de bases de datos faltantes)");
@@ -102,28 +175,6 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
   const facturaPage = await notion.pages.create(pagePayload);
 
   for (const item of invoice.items) {
-    await notion.pages.create({
-      parent: { database_id: ITEMS_DB_ID! },
-      properties: {
-        "Artículos": {
-          title: [{ text: { content: item.description } }],
-        },
-        "Proveedor": {
-          relation: [{ id: facturaPage.id }],
-        },
-        "Cantidad": {
-          number: item.quantity ?? 0,
-        },
-        "Unidad": {
-          rich_text: [{ text: { content: item.unit ?? "" } }],
-        },
-        "Precio Unitario": {
-          number: item.unitPrice ?? 0,
-        },
-        "Total Ítem": {
-          number: item.totalPrice ?? 0,
-        },
-      },
-    });
+    await syncItemToNotion(notion, item, facturaPage.id);
   }
 }
