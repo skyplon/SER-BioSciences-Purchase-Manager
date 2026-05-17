@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft } from "lucide-react";
+import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export function InvoiceDetail() {
@@ -196,8 +196,18 @@ export function InvoiceDetail() {
       {/* Image */}
       {invoice.imageBase64 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Imagen de la Factura</CardTitle>
+            <a
+              href={`data:image/jpeg;base64,${invoice.imageBase64}`}
+              download={`factura-${invoice.id}-${invoice.supplier.replace(/\s+/g, "_")}.jpg`}
+              data-testid="button-download-image"
+            >
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Descargar
+              </Button>
+            </a>
           </CardHeader>
           <CardContent>
             <img
