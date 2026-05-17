@@ -86,7 +86,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar desktop */}
       <aside className="hidden md:flex flex-col w-60 border-r border-border bg-card">
         <div className="px-6 py-5 border-b border-border">
-          <h1 className="text-lg font-semibold text-foreground">Finca Facturas</h1>
+          <h1 className="text-lg font-semibold text-foreground">SER BioSciences</h1>
           <p className="text-xs text-muted-foreground mt-0.5">{t("layout.subtitle")}</p>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -115,8 +115,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="px-6 py-5 border-b border-border flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Finca Facturas</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Gestor de Compras</p>
+            <h1 className="text-lg font-semibold text-foreground">SER BioSciences</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("layout.subtitle")}</p>
           </div>
           <button onClick={() => setMobileOpen(false)} className="text-muted-foreground">
             <X className="h-5 w-5" />
