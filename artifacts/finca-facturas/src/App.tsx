@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from "wouter";
@@ -14,6 +14,7 @@ import { InvoiceDetail } from "@/pages/invoice-detail";
 import { SettingsPage } from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import { SettingsProvider } from "@/contexts/settings-context";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,17 @@ function SignUpPage() {
   );
 }
 
+function ClerkAuthSync() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setAuthTokenGetter(() => getToken());
+    return () => { setAuthTokenGetter(null); };
+  }, [getToken]);
+
+  return null;
+}
+
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
   const qc = useQueryClient();
@@ -178,6 +190,7 @@ function ClerkProviderWithRoutes() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
+        <ClerkAuthSync />
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
           <Switch>
