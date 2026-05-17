@@ -23,3 +23,8 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 });
+
+process.on("SIGTERM", () => {
+  logger.info("SIGTERM received, allowing in-flight operations to finish...");
+  setTimeout(() => process.exit(0), 5000);
+});
