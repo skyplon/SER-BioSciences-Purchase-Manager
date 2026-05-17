@@ -61,6 +61,19 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
       "Fecha de registro": {
         date: { start: invoice.createdAt.toISOString().split("T")[0] },
       },
+      ...(invoice.imageUrl
+        ? {
+            "Foto del Recibo": {
+              files: [
+                {
+                  type: "external",
+                  name: `factura-${invoice.id}.jpg`,
+                  external: { url: invoice.imageUrl },
+                },
+              ],
+            },
+          }
+        : {}),
     },
   };
 
