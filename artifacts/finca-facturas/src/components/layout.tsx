@@ -85,9 +85,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
       <aside className="hidden md:flex flex-col w-60 border-r border-border bg-card">
-        <div className="px-6 py-5 border-b border-border">
-          <h1 className="text-lg font-semibold text-foreground">SER BioSciences</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">{t("layout.subtitle")}</p>
+        <div className="px-6 py-5 border-b border-border flex items-center gap-3">
+          <img
+            src={`${import.meta.env.BASE_URL}logo-icon.png`}
+            alt="SER BioSciences"
+            className="h-10 w-10 object-contain flex-shrink-0"
+          />
+          <div>
+            <h1 className="text-base font-semibold text-foreground leading-tight">SER BioSciences</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("layout.subtitle")}</p>
+          </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => renderNavLink(item))}
@@ -114,9 +121,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
       >
         <div className="px-6 py-5 border-b border-border flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">SER BioSciences</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("layout.subtitle")}</p>
+          <div className="flex items-center gap-3">
+            <img
+              src={`${import.meta.env.BASE_URL}logo-icon.png`}
+              alt="SER BioSciences"
+              className="h-9 w-9 object-contain flex-shrink-0"
+            />
+            <div>
+              <h1 className="text-base font-semibold text-foreground leading-tight">SER BioSciences</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("layout.subtitle")}</p>
+            </div>
           </div>
           <button onClick={() => setMobileOpen(false)} className="text-muted-foreground">
             <X className="h-5 w-5" />
