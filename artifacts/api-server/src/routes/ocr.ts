@@ -69,33 +69,20 @@ router.post("/ocr/extract", async (req, res): Promise<void> => {
 
   const imageContent = { type: "image_url" as const, image_url: { url: `data:image/jpeg;base64,${imageBase64}`, detail: "high" as const } };
 
-  const [mainResponse, notesResponse] = await Promise.all([
-    openai.chat.completions.create({
-      model: "gpt-5.2",
-      max_completion_tokens: 8192,
-      messages: [
-        { role: "system", content: BASE_SYSTEM },
-        {
-          role: "user",
-          content: [imageContent, { type: "text", text: "Extrae toda la información de esta factura y devuelve solo el JSON." }],
-        },
-      ],
-    }),
-    openai.chat.completions.create({
-      model: "gpt-5.2",
-      max_completion_tokens: 4096,
-      messages: [
-        {
-          role: "system",
-          content: `Eres un extractor de datos de facturas colombianas. Tu única tarea es leer la imagen y listar con viñetas (•) TODA la información complementaria visible, sin omitir nada. Debes incluir obligatoriamente (si aparece): NIT del proveedor, dirección del proveedor, teléfono del proveedor, nombre del vendedor o asesor, forma y medio de pago, número de remisión, número de OC, lotes y vencimientos de productos, descuentos o recargos, número y fecha de la resolución DIAN, CUFE o CUDE completo, número de autorización de numeración, rango de facturas autorizado, vigencia de la autorización, firma digital (primeros 60 caracteres + "..."), fecha DIAN, régimen tributario del proveedor, y cualquier leyenda o nota impresa. Responde SOLO con el texto de las viñetas, sin JSON, sin encabezados.`,
-        },
-        {
-          role: "user",
-          content: [imageContent, { type: "text", text: "Lista toda la información complementaria de esta factura con viñetas •. No omitas nada visible." }],
-        },
-      ],
-    }),
-  ]);
+  const mainResponse = await openai.chat.completions.create({
+    model: "gpt-5.2",
+    max_completion_tokens: 8192,
+    messages: [
+      { role: "system", content: BASE_SYSTEM },
+      {
+        role: "user",
+        content: [
+          imageContent,
+          { type: "text", text: "Extrae toda la información de esta factura y devuelve solo el JSON. Para el campo 'notes' es OBLIGATORIO incluir con viñetas • todo dato complementario visible: NIT y contacto del proveedor, vendedor, forma y medio de pago, remisión, resolución DIAN, CUFE completo, autorización de numeración con rango y vigencia, régimen tributario, y cualquier leyenda impresa. No omitas nada." },
+        ],
+      },
+    ],
+  });
 
   const content = mainResponse.choices[0]?.message?.content ?? "{}";
   let extracted: Record<string, unknown>;
@@ -106,8 +93,28 @@ router.post("/ocr/extract", async (req, res): Promise<void> => {
     extracted = { invoiceNumber: null, supplier: null, date: null, category: null, totalAmount: null, notes: null, items: [] };
   }
 
+  const mainNotes = typeof extracted.notes === "string" ? extracted.notes : null;
+
+  // Second focused call to enrich notes — only overwrites if it returns more content
+  const notesResponse = await openai.chat.completions.create({
+    model: "gpt-5.2",
+    max_completion_tokens: 2048,
+    messages: [
+      {
+        role: "system",
+        content: "Eres un extractor de datos complementarios de facturas. Lee la imagen y transcribe con viñetas (•) TODOS los datos que NO sean artículos/ítems del pedido: NIT del proveedor, dirección, teléfono, vendedor, forma de pago, medio de pago, remisión, OC, lotes, vencimientos, descuentos, resolución DIAN con número y fecha, CUFE o CUDE completo, autorización de numeración (número, rango, vigencia), firma digital (primeros 60 caracteres + ...), fecha DIAN, régimen tributario (autorretenedor ICA, IVA, grandes contribuyentes, etc.), leyendas impresas. Responde ÚNICAMENTE con las viñetas, sin texto adicional.",
+      },
+      {
+        role: "user",
+        content: [imageContent, { type: "text", text: "Transcribe con viñetas • todos los datos complementarios visibles en esta factura." }],
+      },
+    ],
+  });
+
   const notesText = notesResponse.choices[0]?.message?.content?.trim() ?? null;
-  if (notesText) {
+  req.log.info({ mainNotesLen: mainNotes?.length ?? 0, notesTextLen: notesText?.length ?? 0 }, "notes comparison");
+
+  if (notesText && (!mainNotes || notesText.length > mainNotes.length)) {
     extracted.notes = notesText;
   }
 
