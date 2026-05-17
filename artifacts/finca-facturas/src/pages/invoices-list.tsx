@@ -247,7 +247,7 @@ export function InvoicesList() {
                       supplier: "Proveedor",
                       invoiceNumber: "No. Factura",
                       category: "Categoría",
-                      totalAmount: "Total",
+                      totalAmount: "Total (COP)",
                     };
                     const isRight = field === "totalAmount";
                     return (
