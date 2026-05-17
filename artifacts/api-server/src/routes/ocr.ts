@@ -69,20 +69,36 @@ router.post("/ocr/extract", async (req, res): Promise<void> => {
 
   const imageContent = { type: "image_url" as const, image_url: { url: `data:image/jpeg;base64,${imageBase64}`, detail: "high" as const } };
 
-  const mainResponse = await openai.chat.completions.create({
-    model: "gpt-5.2",
-    max_completion_tokens: 8192,
-    messages: [
-      { role: "system", content: BASE_SYSTEM },
-      {
-        role: "user",
-        content: [
-          imageContent,
-          { type: "text", text: "Extrae toda la información de esta factura y devuelve solo el JSON. Para el campo 'notes' es OBLIGATORIO incluir con viñetas • todo dato complementario visible: NIT y contacto del proveedor, vendedor, forma y medio de pago, remisión, resolución DIAN, CUFE completo, autorización de numeración con rango y vigencia, régimen tributario, y cualquier leyenda impresa. No omitas nada." },
-        ],
-      },
-    ],
-  });
+  const [mainResponse, notesResponse] = await Promise.all([
+    openai.chat.completions.create({
+      model: "gpt-5.2",
+      max_completion_tokens: 8192,
+      messages: [
+        { role: "system", content: BASE_SYSTEM },
+        {
+          role: "user",
+          content: [
+            imageContent,
+            { type: "text", text: "Extrae toda la información de esta factura y devuelve solo el JSON. Para el campo 'notes' es OBLIGATORIO incluir con viñetas • todo dato complementario visible: NIT y contacto del proveedor, vendedor, forma y medio de pago, remisión, resolución DIAN, CUFE completo, autorización de numeración con rango y vigencia, régimen tributario, y cualquier leyenda impresa. No omitas nada." },
+          ],
+        },
+      ],
+    }),
+    openai.chat.completions.create({
+      model: "gpt-5.2",
+      max_completion_tokens: 2048,
+      messages: [
+        {
+          role: "system",
+          content: "Eres un extractor de datos complementarios de facturas. Lee la imagen y transcribe con viñetas (•) TODOS los datos que NO sean artículos/ítems del pedido: NIT del proveedor, dirección, teléfono, vendedor, forma de pago, medio de pago, remisión, OC, lotes, vencimientos, descuentos, resolución DIAN con número y fecha, CUFE o CUDE completo, autorización de numeración (número, rango, vigencia), firma digital (primeros 60 caracteres + ...), fecha DIAN, régimen tributario (autorretenedor ICA, IVA, grandes contribuyentes, etc.), leyendas impresas. Responde ÚNICAMENTE con las viñetas, sin texto adicional.",
+        },
+        {
+          role: "user",
+          content: [imageContent, { type: "text", text: "Transcribe con viñetas • todos los datos complementarios visibles en esta factura." }],
+        },
+      ],
+    }),
+  ]);
 
   const content = mainResponse.choices[0]?.message?.content ?? "{}";
   let extracted: Record<string, unknown>;
@@ -94,23 +110,6 @@ router.post("/ocr/extract", async (req, res): Promise<void> => {
   }
 
   const mainNotes = typeof extracted.notes === "string" ? extracted.notes : null;
-
-  // Second focused call to enrich notes — only overwrites if it returns more content
-  const notesResponse = await openai.chat.completions.create({
-    model: "gpt-5.2",
-    max_completion_tokens: 2048,
-    messages: [
-      {
-        role: "system",
-        content: "Eres un extractor de datos complementarios de facturas. Lee la imagen y transcribe con viñetas (•) TODOS los datos que NO sean artículos/ítems del pedido: NIT del proveedor, dirección, teléfono, vendedor, forma de pago, medio de pago, remisión, OC, lotes, vencimientos, descuentos, resolución DIAN con número y fecha, CUFE o CUDE completo, autorización de numeración (número, rango, vigencia), firma digital (primeros 60 caracteres + ...), fecha DIAN, régimen tributario (autorretenedor ICA, IVA, grandes contribuyentes, etc.), leyendas impresas. Responde ÚNICAMENTE con las viñetas, sin texto adicional.",
-      },
-      {
-        role: "user",
-        content: [imageContent, { type: "text", text: "Transcribe con viñetas • todos los datos complementarios visibles en esta factura." }],
-      },
-    ],
-  });
-
   const notesText = notesResponse.choices[0]?.message?.content?.trim() ?? null;
   req.log.info({ mainNotesLen: mainNotes?.length ?? 0, notesTextLen: notesText?.length ?? 0 }, "notes comparison");
 
