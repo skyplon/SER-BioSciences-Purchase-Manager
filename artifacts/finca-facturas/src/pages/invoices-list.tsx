@@ -34,7 +34,7 @@ import {
 import { PlusCircle, Download, Trash2, Eye, Search, X, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-type SortField = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount";
+type SortField = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount" | "createdAt";
 type SortDir = "asc" | "desc";
 
 function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: SortField | null; sortDir: SortDir }) {
@@ -136,6 +136,9 @@ export function InvoicesList() {
     } else if (sortField === "totalAmount") {
       valA = a.totalAmount ?? 0;
       valB = b.totalAmount ?? 0;
+    } else if (sortField === "createdAt") {
+      valA = a.createdAt;
+      valB = b.createdAt;
     }
     if (valA === null || valB === null) return 0;
     if (valA < valB) return sortDir === "asc" ? -1 : 1;
@@ -237,9 +240,10 @@ export function InvoicesList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  {(["date", "supplier", "invoiceNumber", "category", "totalAmount"] as SortField[]).map((field, i) => {
+                  {(["date", "createdAt", "supplier", "invoiceNumber", "category", "totalAmount"] as SortField[]).map((field, i) => {
                     const labels: Record<SortField, string> = {
-                      date: "Fecha",
+                      date: "Fecha Compra",
+                      createdAt: "Fecha Creación",
                       supplier: "Proveedor",
                       invoiceNumber: "No. Factura",
                       category: "Categoría",
@@ -265,6 +269,7 @@ export function InvoicesList() {
                 {sortedInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-muted/30 transition-colors" data-testid={`row-invoice-${inv.id}`}>
                     <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.date)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.createdAt)}</td>
                     <td className="px-4 py-3 font-medium text-foreground">{inv.supplier}</td>
                     <td className="px-4 py-3 text-muted-foreground">{inv.invoiceNumber ?? "—"}</td>
                     <td className="px-4 py-3">
