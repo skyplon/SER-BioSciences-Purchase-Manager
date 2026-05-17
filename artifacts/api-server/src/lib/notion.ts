@@ -101,33 +101,29 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
 
   const facturaPage = await notion.pages.create(pagePayload);
 
-  if (invoice.items.length > 0) {
-    await Promise.all(
-      invoice.items.map((item) =>
-        notion.pages.create({
-          parent: { database_id: ITEMS_DB_ID! },
-          properties: {
-            "Artículos": {
-              title: [{ text: { content: item.description } }],
-            },
-            "Proveedor": {
-              relation: [{ id: facturaPage.id }],
-            },
-            "Cantidad": {
-              number: item.quantity ?? 0,
-            },
-            "Unidad": {
-              rich_text: [{ text: { content: item.unit ?? "" } }],
-            },
-            "Precio Unitario": {
-              number: item.unitPrice ?? 0,
-            },
-            "Total Ítem": {
-              number: item.totalPrice ?? 0,
-            },
-          },
-        })
-      )
-    );
+  for (const item of invoice.items) {
+    await notion.pages.create({
+      parent: { database_id: ITEMS_DB_ID! },
+      properties: {
+        "Artículos": {
+          title: [{ text: { content: item.description } }],
+        },
+        "Proveedor": {
+          relation: [{ id: facturaPage.id }],
+        },
+        "Cantidad": {
+          number: item.quantity ?? 0,
+        },
+        "Unidad": {
+          rich_text: [{ text: { content: item.unit ?? "" } }],
+        },
+        "Precio Unitario": {
+          number: item.unitPrice ?? 0,
+        },
+        "Total Ítem": {
+          number: item.totalPrice ?? 0,
+        },
+      },
+    });
   }
 }
