@@ -105,7 +105,7 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
             "Descripción": {
               title: [{ text: { content: item.description } }],
             },
-            "Factura": {
+            "Proveedor": {
               relation: [{ id: facturaPage.id }],
             },
             "Cantidad": {
