@@ -23,7 +23,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin text
   "category": "una de: Alimentación animal, Construcción, Consumibles del Laboratorio, Energía, Gasolina, Limpieza, Salud Animal, Transporte, Otros",
   "totalAmount": número total de la factura o null,
   "description": "descripción corta (máximo 2 oraciones) explicando la naturaleza de la compra: qué tipo de proveedor es, qué tipo de artículos se compraron y para qué sirven en el contexto de una finca.",
-  "notes": "observaciones adicionales relevantes o null",
+  "notes": "Observaciones estructuradas y detalladas. Extrae y organiza con viñetas '•' TODA la información complementaria disponible en la factura, incluyendo: condiciones de pago (contado/crédito/plazo en días), nombre del vendedor o asesor comercial, número de orden de compra u OC, número de remisión o guía de despacho, descuentos aplicados o recargos especiales, datos de contacto del proveedor (teléfono/email/dirección si aparecen), número de resolución DIAN o CUFE/CUDE, lotes o seriales de productos, observaciones o leyendas impresas en la factura, condiciones de entrega, garantías, y cualquier dato adicional relevante para trazabilidad y control de compras en la finca. Sé completo y detallado. Usa null SOLO si la factura no tiene absolutamente ninguna información adicional.",
   "items": [
     ${ITEM_JSON}
   ]
@@ -94,6 +94,7 @@ Se te proporcionan los datos de una factura extraídos de una imagen. Tu tarea e
 4. Para cada artículo: generar/corregir el "name" (nombre genérico estandarizado en Title Case) y corregir la ortografía de "description".
 5. Asegurarte de que las unidades estén estandarizadas (unidad, litro, kg, m, etc.).
 6. No modificar valores numéricos ni fechas.
+7. Enriquecer el campo "notes": si está vacío o es escueto, complementa con observaciones útiles inferidas del contexto (tipo de proveedor, uso probable de los artículos en una finca, condiciones típicas de compra, recomendaciones de almacenamiento o manejo si aplica). Usa viñetas '•' para cada punto y organiza la información de forma clara y estructurada. El campo notes debe ser siempre detallado y aportar valor real al registro de la compra.
 
 Devuelve ÚNICAMENTE el JSON corregido con la misma estructura exacta (sin texto adicional):
 {

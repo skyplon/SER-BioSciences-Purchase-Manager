@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck, FileText, FileType, Wand2 } from "lucide-react";
+import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck, FileType, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { BUYER_OPTIONS } from "@/lib/buyers";
@@ -55,10 +55,8 @@ export function InvoiceNew() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { getToken } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
-  const docxInputRef = useRef<HTMLInputElement>(null);
+  const unifiedFileInputRef = useRef<HTMLInputElement>(null);
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -126,6 +124,16 @@ export function InvoiceNew() {
       handleExtract(base64);
     } catch {
       toast({ title: t("invoiceNew.pdfError"), variant: "destructive" });
+    }
+  };
+
+  const handleUnifiedFile = (file: File) => {
+    if (file.type.startsWith("image/")) {
+      handleImageFile(file);
+    } else if (file.type === "application/pdf") {
+      handlePdfFile(file);
+    } else {
+      handleDocxFile(file);
     }
   };
 
@@ -480,42 +488,25 @@ export function InvoiceNew() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
-                className="h-24 flex-col gap-2"
+                className="h-28 flex-col gap-2"
                 onClick={() => cameraInputRef.current?.click()}
                 data-testid="button-camera-capture"
               >
-                <Camera className="h-6 w-6" />
-                <span className="text-xs">{t("invoiceNew.takePhoto")}</span>
+                <Camera className="h-7 w-7" />
+                <span className="text-sm font-medium">{t("invoiceNew.takePhoto")}</span>
               </Button>
               <Button
                 variant="outline"
-                className="h-24 flex-col gap-2"
-                onClick={() => fileInputRef.current?.click()}
+                className="h-28 flex-col gap-2"
+                onClick={() => unifiedFileInputRef.current?.click()}
                 data-testid="button-upload-image"
               >
-                <Upload className="h-6 w-6" />
-                <span className="text-xs">{t("invoiceNew.uploadImage")}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-24 flex-col gap-2"
-                onClick={() => pdfInputRef.current?.click()}
-                data-testid="button-upload-pdf"
-              >
-                <FileText className="h-6 w-6 text-red-500" />
-                <span className="text-xs">{t("invoiceNew.uploadPdf")}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-24 flex-col gap-2"
-                onClick={() => docxInputRef.current?.click()}
-                data-testid="button-upload-word"
-              >
-                <FileType className="h-6 w-6 text-blue-500" />
-                <span className="text-xs">{t("invoiceNew.uploadWord")}</span>
+                <Upload className="h-7 w-7" />
+                <span className="text-sm font-medium">{t("invoiceNew.uploadFile")}</span>
+                <span className="text-xs text-muted-foreground">Imagen, PDF o Word</span>
               </Button>
             </div>
           )}
@@ -532,37 +523,15 @@ export function InvoiceNew() {
             data-testid="input-camera"
           />
           <input
-            ref={fileInputRef}
+            ref={unifiedFileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) handleImageFile(file);
+              if (file) handleUnifiedFile(file);
             }}
             data-testid="input-file-upload"
-          />
-          <input
-            ref={pdfInputRef}
-            type="file"
-            accept="application/pdf"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handlePdfFile(file);
-            }}
-            data-testid="input-pdf-upload"
-          />
-          <input
-            ref={docxInputRef}
-            type="file"
-            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleDocxFile(file);
-            }}
-            data-testid="input-docx-upload"
           />
         </CardContent>
       </Card>
@@ -679,16 +648,24 @@ export function InvoiceNew() {
             {showErrors && !description.trim() && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="notes">{t("invoiceNew.notes")} *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="notes">{t("invoiceNew.notes")} *</Label>
+              {extracting && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> {t("invoiceNew.generatingDesc")}
+                </span>
+              )}
+            </div>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t("invoiceNew.notesPlaceholder")}
-              rows={4}
+              rows={10}
               data-testid="input-notes"
-              className={cn("resize-y", showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
+              className={cn("resize-y font-mono text-sm leading-relaxed", showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
             />
+            <p className="text-xs text-muted-foreground">{t("invoiceNew.notesHint")}</p>
             {showErrors && !notes.trim() && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
           </div>
         </CardContent>
