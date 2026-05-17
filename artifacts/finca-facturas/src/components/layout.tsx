@@ -164,14 +164,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-base font-semibold text-foreground flex-1">Finca Facturas</h1>
+          <img
+            src={`${import.meta.env.BASE_URL}ser-biosciences-logo.png`}
+            alt="SER BioSciences"
+            className="h-7 w-auto object-contain"
+          />
           <button
             onClick={() => signOut({ redirectUrl: `${basePath}/sign-in` })}
-            className="text-muted-foreground"
+            className="text-muted-foreground ml-auto"
           >
             <LogOut className="h-4 w-4" />
           </button>
         </header>
+
+        {/* Desktop top bar */}
+        <header className="hidden md:flex items-center justify-end px-6 py-2 border-b border-border bg-card">
+          <img
+            src={`${import.meta.env.BASE_URL}ser-biosciences-logo.png`}
+            alt="SER BioSciences"
+            className="h-10 w-auto object-contain"
+          />
+        </header>
+
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
     </div>
