@@ -661,11 +661,10 @@ export function InvoiceNew() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t("invoiceNew.notesPlaceholder")}
-              rows={10}
+              rows={4}
               data-testid="input-notes"
-              className={cn("resize-y font-mono text-sm leading-relaxed", showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
+              className={cn("resize-y", showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
             />
-            <p className="text-xs text-muted-foreground">{t("invoiceNew.notesHint")}</p>
             {showErrors && !notes.trim() && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
           </div>
         </CardContent>

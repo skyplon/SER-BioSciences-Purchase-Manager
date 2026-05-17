@@ -115,8 +115,7 @@ const translations = {
     "invoiceNew.invoiceNumberPlaceholder": "Ej: 001-2024",
     "invoiceNew.totalPlaceholder": "Ej: 85000",
     "invoiceNew.descriptionPlaceholder": "El modelo de IA generará una descripción automáticamente al cargar la foto",
-    "invoiceNew.notesPlaceholder": "• Condiciones de pago: contado / crédito 30 días\n• Vendedor: Nombre del asesor\n• Descuentos aplicados\n• Datos de contacto del proveedor\n• Resolución DIAN / CUFE\n• Observaciones impresas en la factura\n• Otros datos relevantes...",
-    "invoiceNew.notesHint": "La IA completa este campo automáticamente. Puedes agregar o editar libremente.",
+    "invoiceNew.notesPlaceholder": "Observaciones adicionales, información adicional de la factura, condiciones de pago, etc.",
     "invoiceNew.itemNamePlaceholder": "Ej: Jeringa 5ml",
     "invoiceNew.itemDescPlaceholder": "Descripción completa de la factura",
 
@@ -300,8 +299,7 @@ const translations = {
     "invoiceNew.invoiceNumberPlaceholder": "Ex: 001-2024",
     "invoiceNew.totalPlaceholder": "Ex: 85000",
     "invoiceNew.descriptionPlaceholder": "The AI model will generate a description automatically when you upload the photo",
-    "invoiceNew.notesPlaceholder": "• Payment terms: cash / 30-day credit\n• Sales rep name\n• Discounts applied\n• Supplier contact info\n• DIAN resolution / CUFE\n• Printed invoice notes\n• Other relevant details...",
-    "invoiceNew.notesHint": "AI fills this field automatically. You can freely add or edit.",
+    "invoiceNew.notesPlaceholder": "Additional observations, extra invoice info, payment terms, etc.",
     "invoiceNew.itemNamePlaceholder": "Ex: 5ml Syringe",
     "invoiceNew.itemDescPlaceholder": "Full description from invoice",
 
