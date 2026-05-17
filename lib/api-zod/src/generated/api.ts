@@ -33,6 +33,7 @@ export const ListInvoicesResponseItem = zod.object({
   category: zod.string(),
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
+  description: zod.string().nullish(),
   notes: zod.string().nullish(),
   buyer: zod.string().nullish(),
   createdAt: zod.string(),
@@ -61,6 +62,7 @@ export const CreateInvoiceBody = zod.object({
   category: zod.string(),
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
+  description: zod.string().nullish(),
   notes: zod.string().nullish(),
   buyer: zod.string().nullish(),
   items: zod
@@ -105,6 +107,7 @@ export const GetInvoiceSummaryResponse = zod.object({
       category: zod.string(),
       totalAmount: zod.number().nullish(),
       imageBase64: zod.string().nullish(),
+      description: zod.string().nullish(),
       notes: zod.string().nullish(),
       buyer: zod.string().nullish(),
       createdAt: zod.string(),
@@ -147,6 +150,7 @@ export const GetInvoiceResponse = zod.object({
   category: zod.string(),
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
+  description: zod.string().nullish(),
   notes: zod.string().nullish(),
   buyer: zod.string().nullish(),
   createdAt: zod.string(),
@@ -177,6 +181,7 @@ export const UpdateInvoiceBody = zod.object({
   date: zod.string().nullish(),
   category: zod.string().optional(),
   totalAmount: zod.number().nullish(),
+  description: zod.string().nullish(),
   notes: zod.string().nullish(),
   buyer: zod.string().nullish(),
   items: zod
@@ -200,6 +205,7 @@ export const UpdateInvoiceResponse = zod.object({
   category: zod.string(),
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
+  description: zod.string().nullish(),
   notes: zod.string().nullish(),
   buyer: zod.string().nullish(),
   createdAt: zod.string(),
@@ -255,6 +261,7 @@ export const ExtractInvoiceDataResponse = zod.object({
   date: zod.string().nullish(),
   category: zod.string().nullish(),
   totalAmount: zod.number().nullish(),
+  description: zod.string().nullish(),
   notes: zod.string().nullish(),
   items: zod.array(
     zod.object({

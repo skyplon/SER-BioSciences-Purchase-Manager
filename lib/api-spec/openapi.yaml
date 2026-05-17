@@ -232,6 +232,8 @@ components:
           type: ["number", "null"]
         imageBase64:
           type: ["string", "null"]
+        description:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
         buyer:
@@ -289,6 +291,8 @@ components:
           type: ["number", "null"]
         imageBase64:
           type: ["string", "null"]
+        description:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
         buyer:
@@ -330,6 +334,8 @@ components:
           type: string
         totalAmount:
           type: ["number", "null"]
+        description:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
         buyer:
@@ -425,6 +431,8 @@ components:
           type: ["string", "null"]
         totalAmount:
           type: ["number", "null"]
+        description:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
         items:

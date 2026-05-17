@@ -17,6 +17,8 @@ export interface UpdateInvoiceBody {
   /** @nullable */
   totalAmount?: number | null;
   /** @nullable */
+  description?: string | null;
+  /** @nullable */
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;

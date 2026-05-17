@@ -53,6 +53,7 @@ export function InvoiceNew() {
   const [category, setCategory] = useState("Otros");
   const [buyer, setBuyer] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
+  const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<ItemRow[]>([emptyItem()]);
   const [extracting, setExtracting] = useState(false);
@@ -94,6 +95,7 @@ export function InvoiceNew() {
       if (data.date) setDate(data.date);
       if (data.category) setCategory(data.category);
       if (data.totalAmount != null) setTotalAmount(String(data.totalAmount));
+      if (data.description) setDescription(data.description);
       if (data.notes) setNotes(data.notes);
       if (data.items && data.items.length > 0) {
         setItems(
@@ -143,6 +145,7 @@ export function InvoiceNew() {
         category,
         totalAmount: totalAmount ? parseFloat(totalAmount) : null,
         imageBase64: imageBase64 || null,
+        description: description.trim() || null,
         notes: notes.trim() || null,
         buyer: buyer || null,
         items: filteredItems.map((item) => ({
@@ -338,6 +341,24 @@ export function InvoiceNew() {
                 data-testid="input-total-amount"
               />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="description">Descripción</Label>
+              {extracting && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Generando...
+                </span>
+              )}
+            </div>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="El modelo de IA generará una descripción automáticamente al cargar la foto"
+              rows={3}
+              data-testid="input-description"
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="notes">Notas</Label>

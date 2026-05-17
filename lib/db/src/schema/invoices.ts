@@ -11,6 +11,7 @@ export const invoicesTable = pgTable("invoices", {
   totalAmount: numeric("total_amount", { precision: 12, scale: 2 }),
   imageBase64: text("image_base64"),
   imageObjectPath: text("image_object_path"),
+  description: text("description"),
   notes: text("notes"),
   buyer: text("buyer"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

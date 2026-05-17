@@ -36,6 +36,8 @@ export interface Invoice {
   /** @nullable */
   imageBase64?: string | null;
   /** @nullable */
+  description?: string | null;
+  /** @nullable */
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;
@@ -68,6 +70,8 @@ export interface CreateInvoiceBody {
   /** @nullable */
   imageBase64?: string | null;
   /** @nullable */
+  description?: string | null;
+  /** @nullable */
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;
@@ -83,6 +87,8 @@ export interface UpdateInvoiceBody {
   category?: string;
   /** @nullable */
   totalAmount?: number | null;
+  /** @nullable */
+  description?: string | null;
   /** @nullable */
   notes?: string | null;
   /** @nullable */
@@ -142,6 +148,8 @@ export interface ExtractedInvoiceData {
   category?: string | null;
   /** @nullable */
   totalAmount?: number | null;
+  /** @nullable */
+  description?: string | null;
   /** @nullable */
   notes?: string | null;
   items: ExtractedInvoiceItem[];

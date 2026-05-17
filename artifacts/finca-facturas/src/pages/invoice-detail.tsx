@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User } from "lucide-react";
+import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export function InvoiceDetail() {
@@ -156,6 +156,15 @@ export function InvoiceDetail() {
                   <div>
                     <p className="text-xs text-muted-foreground">Comprador</p>
                     <p className="text-sm font-medium" data-testid="text-invoice-buyer">{invoice.buyer}</p>
+                  </div>
+                </div>
+              )}
+              {invoice.description && (
+                <div className="flex items-start gap-3">
+                  <AlignLeft className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Descripción</p>
+                    <p className="text-sm" data-testid="text-invoice-description">{invoice.description}</p>
                   </div>
                 </div>
               )}

@@ -20,6 +20,8 @@ export interface Invoice {
   /** @nullable */
   imageBase64?: string | null;
   /** @nullable */
+  description?: string | null;
+  /** @nullable */
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;

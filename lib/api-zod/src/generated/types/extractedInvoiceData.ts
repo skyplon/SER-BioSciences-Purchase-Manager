@@ -19,6 +19,8 @@ export interface ExtractedInvoiceData {
   /** @nullable */
   totalAmount?: number | null;
   /** @nullable */
+  description?: string | null;
+  /** @nullable */
   notes?: string | null;
   items: ExtractedInvoiceItem[];
 }

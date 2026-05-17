@@ -23,6 +23,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin text
   "date": "fecha en formato YYYY-MM-DD o null si no está clara",
   "category": "una de: Alimentación animal, Construcción, Consumibles del Laboratorio, Energía, Gasolina, Limpieza, Salud Animal, Transporte, Otros",
   "totalAmount": número total de la factura o null,
+  "description": "descripción corta (máximo 2 oraciones) explicando la naturaleza de la compra: qué tipo de proveedor es, qué tipo de artículos se compraron y para qué sirven en el contexto de una finca. Ejemplo: 'Compra de materiales de construcción (cemento, varilla y arena) en ferretería local. Insumos destinados para obras de infraestructura en la finca.'",
   "notes": "observaciones adicionales relevantes o null",
   "items": [
     {
