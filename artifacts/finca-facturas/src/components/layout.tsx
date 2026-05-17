@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, PlusCircle, Menu, X } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useClerk, useUser } from "@clerk/react";
 
 const navItems = [
   { href: "/", label: "Panel Principal", icon: LayoutDashboard },
@@ -9,9 +10,47 @@ const navItems = [
   { href: "/invoices/new", label: "Nueva Factura", icon: PlusCircle },
 ];
 
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+function UserMenu() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  return (
+    <div className="px-4 py-3 border-t border-border">
+      <div className="flex items-center gap-3 mb-2">
+        {user?.imageUrl ? (
+          <img
+            src={user.imageUrl}
+            alt={user.fullName ?? ""}
+            className="h-8 w-8 rounded-full object-cover flex-shrink-0"
+          />
+        ) : (
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <User className="h-4 w-4 text-primary" />
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">{user?.fullName ?? user?.primaryEmailAddress?.emailAddress}</p>
+          <p className="text-xs text-muted-foreground truncate">{user?.primaryEmailAddress?.emailAddress}</p>
+        </div>
+      </div>
+      <button
+        onClick={() => signOut({ redirectUrl: `${basePath}/sign-in` })}
+        className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+      >
+        <LogOut className="h-3.5 w-3.5" />
+        Cerrar sesión
+      </button>
+    </div>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -43,9 +82,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="px-6 py-4 border-t border-border">
-          <p className="text-xs text-muted-foreground">Finca citrícola y ganadera</p>
-        </div>
+        <UserMenu />
       </aside>
 
       {/* Mobile overlay */}
@@ -94,6 +131,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        {/* Mobile user info */}
+        <div className="px-4 py-3 border-t border-border">
+          <div className="flex items-center gap-3 mb-2">
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{user?.fullName ?? ""}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.primaryEmailAddress?.emailAddress}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => signOut({ redirectUrl: `${basePath}/sign-in` })}
+            className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Cerrar sesión
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}
@@ -107,7 +167,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-base font-semibold text-foreground">Finca Facturas</h1>
+          <h1 className="text-base font-semibold text-foreground flex-1">Finca Facturas</h1>
+          <button
+            onClick={() => signOut({ redirectUrl: `${basePath}/sign-in` })}
+            className="text-muted-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
