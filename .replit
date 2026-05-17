@@ -30,3 +30,9 @@ externalPort = 8081
 [[ports]]
 localPort = 20546
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+NOTION_FACTURAS_DB_ID = "5bd077eb92a74386a548bd622172a488"
+NOTION_ITEMS_DB_ID = "14a40dc5a31740f38b79ef33ad24f342"

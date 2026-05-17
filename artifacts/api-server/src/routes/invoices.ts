@@ -11,6 +11,7 @@ import {
   ListInvoicesQueryParams,
 } from "@workspace/api-zod";
 import ExcelJS from "exceljs";
+import { syncInvoiceToNotion } from "../lib/notion.js";
 
 const router: IRouter = Router();
 
@@ -225,6 +226,28 @@ router.post("/invoices", async (req, res): Promise<void> => {
 
   const result = await getInvoiceWithItems(invoice.id);
   res.status(201).json(result);
+
+  if (result) {
+    syncInvoiceToNotion({
+      id: result.id,
+      invoiceNumber: result.invoiceNumber ?? null,
+      supplier: result.supplier,
+      date: result.date ?? null,
+      category: result.category,
+      totalAmount: result.totalAmount ?? null,
+      notes: result.notes ?? null,
+      createdAt: result.createdAt,
+      items: result.items.map((item) => ({
+        description: item.description,
+        quantity: item.quantity ?? null,
+        unit: item.unit ?? null,
+        unitPrice: item.unitPrice ?? null,
+        totalPrice: item.totalPrice ?? null,
+      })),
+    }).catch((err) => {
+      console.error("Error sincronizando con Notion:", err?.message ?? err);
+    });
+  }
 });
 
 router.get("/invoices/:id", async (req, res): Promise<void> => {
