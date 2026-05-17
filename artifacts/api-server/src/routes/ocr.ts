@@ -23,7 +23,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin text
   "category": "una de: Alimentación animal, Construcción, Consumibles del Laboratorio, Energía, Gasolina, Limpieza, Salud Animal, Transporte, Otros",
   "totalAmount": número total de la factura o null,
   "description": "descripción corta (máximo 2 oraciones) explicando la naturaleza de la compra: qué tipo de proveedor es, qué tipo de artículos se compraron y para qué sirven en el contexto de una finca.",
-  "notes": "Observaciones estructuradas y detalladas. Extrae y organiza con viñetas '•' TODA la información complementaria visible en la factura. SIEMPRE incluye si están presentes: • Forma y medio de pago • Nombre del vendedor o asesor comercial • NIT/CC del proveedor • Dirección y teléfono del proveedor • Número de remisión o guía de despacho • Número de OC • Lotes y fechas de vencimiento de productos • Descuentos aplicados o recargos • Resolución DIAN (número y fecha) • CUFE o CUDE completo • Autorización de numeración (número, rango de facturas, vigencia) • Firma digital (primeros 40 caracteres seguido de '...') • Fecha DIAN • Régimen tributario del proveedor (IVA, RTE ICA, grandes contribuyentes, etc.) • Leyendas o notas impresas en la factura • Condiciones de entrega o garantías. Sé exhaustivo — esta es la única fuente de trazabilidad del documento. Usa null SOLO si la factura no contiene absolutamente ninguna información adicional.",
+  "notes": "texto con viñetas • cubriendo toda la información complementaria de la factura",
   "items": [
     ${ITEM_JSON}
   ]
@@ -35,7 +35,28 @@ Reglas importantes:
 - Para los precios, extrae solo el número (sin símbolos de moneda ni puntos de miles), en punto decimal.
 - Si no puedes leer claramente un campo, usa null.
 - items debe tener todos los productos/servicios listados en la factura.
-- name de cada item: nombre genérico estandarizado en Title Case que permita identificar el mismo producto entre facturas distintas (ej: 'Jeringa Desechable 5ml', 'Concentrado Novillo Engorde', 'Cemento Gris 50kg'). Evita incluir marcas si hay nombre genérico disponible.`;
+- name de cada item: nombre genérico estandarizado en Title Case que permita identificar el mismo producto entre facturas distintas (ej: 'Jeringa Desechable 5ml', 'Concentrado Novillo Engorde', 'Cemento Gris 50kg'). Evita incluir marcas si hay nombre genérico disponible.
+
+INSTRUCCIONES PARA EL CAMPO "notes":
+El campo notes es crítico para la trazabilidad. Debes extraer TODA la información complementaria visible en la factura usando viñetas (•). Incluye SIEMPRE cada uno de los siguientes datos si aparecen en el documento:
+• Forma de pago y medio de pago
+• Nombre del vendedor o asesor comercial
+• NIT o CC del proveedor
+• Dirección completa del proveedor
+• Teléfono del proveedor
+• Número de remisión o guía de despacho
+• Número de orden de compra (OC)
+• Lotes y fechas de vencimiento de productos
+• Descuentos aplicados o recargos especiales
+• Resolución DIAN (número y fecha de expedición)
+• CUFE o CUDE completo (cópialo tal cual aparece)
+• Autorización de numeración: número de autorización, rango de facturas (ej. CR200001 a CR400000) y vigencia
+• Firma digital (copia los primeros 60 caracteres seguido de "...")
+• Fecha DIAN
+• Régimen tributario del proveedor (autorretenedor ICA, no grandes contribuyentes, responsable de IVA, etc.)
+• Leyendas o avisos impresos en la factura
+• Condiciones especiales de entrega o garantías
+Sé exhaustivo. Usa null SOLO si la factura no tiene absolutamente ninguna información adicional.`;
 
 router.post("/ocr/extract", async (req, res): Promise<void> => {
   const parsed = ExtractInvoiceDataBody.safeParse(req.body);
