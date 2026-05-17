@@ -24,6 +24,7 @@ export interface NotionInvoice {
   date: string | null;
   category: string;
   totalAmount: number | null;
+  description: string | null;
   notes: string | null;
   buyer: string | null;
   createdAt: Date;
@@ -55,6 +56,9 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
       },
       "Total": {
         number: invoice.totalAmount ?? 0,
+      },
+      "Descripción": {
+        rich_text: [{ text: { content: invoice.description ?? "" } }],
       },
       "Notas": {
         rich_text: [{ text: { content: invoice.notes ?? "" } }],

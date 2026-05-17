@@ -238,6 +238,7 @@ router.post("/invoices", async (req, res): Promise<void> => {
       date: result.date ?? null,
       category: result.category,
       totalAmount: result.totalAmount ?? null,
+      description: result.description ?? null,
       notes: result.notes ?? null,
       buyer: result.buyer ?? null,
       createdAt: result.createdAt,
