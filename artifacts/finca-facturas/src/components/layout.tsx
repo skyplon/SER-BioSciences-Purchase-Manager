@@ -87,7 +87,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-60 border-r border-border bg-card">
         <div className="px-6 py-5 border-b border-border">
           <h1 className="text-lg font-semibold text-foreground">Finca Facturas</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Gestor de Compras</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("layout.subtitle")}</p>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => renderNavLink(item))}

@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, FileText, TrendingUp, ShoppingBag } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
+import { useT } from "@/lib/i18n";
 
 export function Dashboard() {
+  const t = useT();
   const { data: summary, isLoading } = useGetInvoiceSummary({
     query: { queryKey: getGetInvoiceSummaryQueryKey() },
   });
@@ -39,13 +41,13 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Panel Principal</h2>
-          <p className="text-sm text-muted-foreground">Resumen de gastos de la finca</p>
+          <h2 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
         </div>
         <Link href="/invoices/new">
           <Button data-testid="button-new-invoice-dashboard">
             <PlusCircle className="h-4 w-4 mr-2" />
-            Capturar Factura
+            {t("dashboard.captureInvoice")}
           </Button>
         </Link>
       </div>
@@ -59,7 +61,7 @@ export function Dashboard() {
                 <FileText className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Facturas</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.totalInvoices")}</p>
                 <p className="text-2xl font-bold text-foreground">{totalInvoices}</p>
               </div>
             </div>
@@ -72,7 +74,7 @@ export function Dashboard() {
                 <TrendingUp className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Gasto</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.totalSpend")}</p>
                 <p className="text-2xl font-bold text-foreground">{formatCurrency(totalAmount)}</p>
               </div>
             </div>
@@ -86,12 +88,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <ShoppingBag className="h-4 w-4" />
-              Gastos por Categoria
+              {t("dashboard.byCategory")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {byCategory.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Sin datos aun</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t("dashboard.noData")}</p>
             ) : (
               <div className="space-y-3" data-testid="list-by-category">
                 {byCategory.map((cat) => (
@@ -104,7 +106,7 @@ export function Dashboard() {
                       >
                         {cat.category}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">{cat.count} facturas</span>
+                      <span className="text-xs text-muted-foreground">{cat.count} {t("dashboard.invoiceCountUnit")}</span>
                     </div>
                     <span className="text-sm font-medium">{formatCurrency(cat.total)}</span>
                   </div>
@@ -117,18 +119,18 @@ export function Dashboard() {
         {/* Top Suppliers */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Principales Proveedores</CardTitle>
+            <CardTitle className="text-base">{t("dashboard.bySupplier")}</CardTitle>
           </CardHeader>
           <CardContent>
             {bySupplier.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Sin datos aun</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t("dashboard.noData")}</p>
             ) : (
               <div className="space-y-3" data-testid="list-by-supplier">
                 {bySupplier.slice(0, 5).map((sup) => (
                   <div key={sup.supplier} className="flex items-center justify-between" data-testid={`row-supplier-${sup.supplier}`}>
                     <div>
                       <p className="text-sm font-medium text-foreground">{sup.supplier}</p>
-                      <p className="text-xs text-muted-foreground">{sup.count} facturas</p>
+                      <p className="text-xs text-muted-foreground">{sup.count} {t("dashboard.invoiceCountUnit")}</p>
                     </div>
                     <span className="text-sm font-medium">{formatCurrency(sup.total)}</span>
                   </div>
@@ -142,20 +144,20 @@ export function Dashboard() {
       {/* Recent Invoices */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Facturas Recientes</CardTitle>
+          <CardTitle className="text-base">{t("dashboard.recent")}</CardTitle>
           <Link href="/invoices">
-            <Button variant="ghost" size="sm" data-testid="link-view-all-invoices">Ver todas</Button>
+            <Button variant="ghost" size="sm" data-testid="link-view-all-invoices">{t("dashboard.viewAll")}</Button>
           </Link>
         </CardHeader>
         <CardContent>
           {recentInvoices.length === 0 ? (
             <div className="py-8 text-center">
               <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No hay facturas registradas</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noInvoices")}</p>
               <Link href="/invoices/new">
                 <Button className="mt-3" size="sm" data-testid="button-first-invoice">
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  Capturar primera factura
+                  {t("dashboard.firstInvoice")}
                 </Button>
               </Link>
             </div>

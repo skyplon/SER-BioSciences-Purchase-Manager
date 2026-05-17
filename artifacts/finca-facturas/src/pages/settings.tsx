@@ -176,29 +176,29 @@ export function SettingsPage() {
       {/* Ideas próximamente */}
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          {language === "es" ? "Próximamente" : "Coming soon"}
+          {t("settings.comingSoon")}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {[
             {
               icon: Bell,
-              label: language === "es" ? "Notificaciones por correo" : "Email notifications",
-              desc: language === "es" ? "Recibe un resumen semanal de compras por email" : "Receive a weekly purchase summary by email",
+              label: t("settings.emailNotifications"),
+              desc: t("settings.emailNotificationsDesc"),
             },
             {
               icon: Database,
-              label: language === "es" ? "Sincronización Notion" : "Notion sync",
-              desc: language === "es" ? "Configura las bases de datos de Notion a usar" : "Configure which Notion databases to use",
+              label: t("settings.notionSync"),
+              desc: t("settings.notionSyncDesc"),
             },
             {
               icon: DollarSign,
-              label: language === "es" ? "Presupuesto mensual" : "Monthly budget",
-              desc: language === "es" ? "Define límites de gasto por categoría" : "Set spending limits per category",
+              label: t("settings.monthlyBudget"),
+              desc: t("settings.monthlyBudgetDesc"),
             },
             {
               icon: Calendar,
-              label: language === "es" ? "Cierre contable" : "Accounting period",
-              desc: language === "es" ? "Define el mes de inicio del año fiscal" : "Set the start month of the fiscal year",
+              label: t("settings.accountingPeriod"),
+              desc: t("settings.accountingPeriodDesc"),
             },
           ].map(({ icon: Icon, label, desc }) => (
             <Card key={label} className="opacity-60">
@@ -209,7 +209,7 @@ export function SettingsPage() {
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-foreground">{label}</p>
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                        {language === "es" ? "Pronto" : "Soon"}
+                        {t("settings.soon")}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>

@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PlusCircle, Download, Trash2, Eye, Search, X, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useT } from "@/lib/i18n";
 
 type SortField = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount" | "createdAt";
 type SortDir = "asc" | "desc";
@@ -45,6 +46,7 @@ function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: 
 }
 
 export function InvoicesList() {
+  const t = useT();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [category, setCategory] = useState<string>("");
@@ -79,11 +81,11 @@ export function InvoicesList() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
-        toast({ title: "Factura eliminada" });
+        toast({ title: t("invoices.deleteSuccess") });
         setDeleteId(null);
       },
       onError: () => {
-        toast({ title: "Error al eliminar", variant: "destructive" });
+        toast({ title: t("invoices.errorDeleting"), variant: "destructive" });
       },
     },
   });
@@ -150,8 +152,8 @@ export function InvoicesList() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Facturas</h2>
-          <p className="text-sm text-muted-foreground">Historial de compras registradas</p>
+          <h2 className="text-2xl font-bold text-foreground">{t("invoices.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("invoices.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -161,12 +163,12 @@ export function InvoicesList() {
             data-testid="button-export-excel"
           >
             <Download className="h-4 w-4 mr-2" />
-            Exportar Excel
+            {t("invoices.exportExcel")}
           </Button>
           <Link href="/invoices/new">
             <Button data-testid="button-new-invoice">
               <PlusCircle className="h-4 w-4 mr-2" />
-              Nueva Factura
+              {t("invoices.newInvoice")}
             </Button>
           </Link>
         </div>
@@ -177,7 +179,7 @@ export function InvoicesList() {
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar proveedor..."
+            placeholder={t("invoices.searchSupplier")}
             value={searchSupplier}
             onChange={(e) => setSearchSupplier(e.target.value)}
             className="pl-8"
@@ -185,11 +187,11 @@ export function InvoicesList() {
           />
         </div>
         <Select value={category || "all"} onValueChange={(v) => setCategory(v === "all" ? "" : v)}>
-          <SelectTrigger className="w-40" data-testid="select-category-filter">
-            <SelectValue placeholder="Categoria" />
+          <SelectTrigger className="w-44" data-testid="select-category-filter">
+            <SelectValue placeholder={t("invoices.allCategories")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas las categorias</SelectItem>
+            <SelectItem value="all">{t("invoices.allCategories")}</SelectItem>
             {CATEGORY_OPTIONS.map((cat) => (
               <SelectItem key={cat} value={cat}>{cat}</SelectItem>
             ))}
@@ -212,7 +214,7 @@ export function InvoicesList() {
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters} data-testid="button-clear-filters">
             <X className="h-4 w-4 mr-1" />
-            Limpiar
+            {t("invoices.clearFilters")}
           </Button>
         )}
       </div>
@@ -224,12 +226,14 @@ export function InvoicesList() {
         </div>
       ) : !invoices || invoices.length === 0 ? (
         <div className="py-16 text-center border border-dashed rounded-lg">
-          <p className="text-muted-foreground text-sm">No hay facturas{hasFilters ? " con esos filtros" : " registradas aun"}</p>
+          <p className="text-muted-foreground text-sm">
+            {hasFilters ? t("invoices.noInvoicesFiltered") : t("invoices.noInvoices")}
+          </p>
           {!hasFilters && (
             <Link href="/invoices/new">
               <Button className="mt-4" size="sm" data-testid="button-first-invoice-list">
                 <PlusCircle className="h-4 w-4 mr-2" />
-                Capturar primera factura
+                {t("invoices.firstInvoice")}
               </Button>
             </Link>
           )}
@@ -240,14 +244,14 @@ export function InvoicesList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  {(["date", "createdAt", "supplier", "invoiceNumber", "category", "totalAmount"] as SortField[]).map((field, i) => {
+                  {(["date", "createdAt", "supplier", "invoiceNumber", "category", "totalAmount"] as SortField[]).map((field) => {
                     const labels: Record<SortField, string> = {
-                      date: "Fecha Compra",
-                      createdAt: "Fecha Creación",
-                      supplier: "Proveedor",
-                      invoiceNumber: "No. Factura",
-                      category: "Categoría",
-                      totalAmount: "Total (COP)",
+                      date: t("invoices.colPurchaseDate"),
+                      createdAt: t("invoices.colCreatedAt"),
+                      supplier: t("invoices.colSupplier"),
+                      invoiceNumber: t("invoices.colNumber"),
+                      category: t("invoices.colCategory"),
+                      totalAmount: t("invoices.colTotal"),
                     };
                     const isRight = field === "totalAmount";
                     return (
@@ -262,7 +266,7 @@ export function InvoicesList() {
                       </th>
                     );
                   })}
-                  <th className="text-center px-4 py-3 font-medium text-muted-foreground">Acciones</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground">{t("invoices.colActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -310,20 +314,20 @@ export function InvoicesList() {
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar factura</AlertDialogTitle>
+            <AlertDialogTitle>{t("invoices.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. La factura y sus items seran eliminados permanentemente.
+              {t("invoices.deleteDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId !== null && deleteMutation.mutate({ id: deleteId })}
               disabled={deleteMutation.isPending}
               data-testid="button-confirm-delete"
             >
-              Eliminar
+              {t("invoices.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

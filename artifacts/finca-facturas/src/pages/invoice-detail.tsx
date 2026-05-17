@@ -25,8 +25,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useT } from "@/lib/i18n";
 
 export function InvoiceDetail() {
+  const t = useT();
   const [, params] = useRoute("/invoices/:id");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -41,11 +43,11 @@ export function InvoiceDetail() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
-        toast({ title: "Factura eliminada" });
+        toast({ title: t("invoices.deleteSuccess") });
         setLocation("/invoices");
       },
       onError: () => {
-        toast({ title: "Error al eliminar", variant: "destructive" });
+        toast({ title: t("invoiceDetail.errorDeleting"), variant: "destructive" });
       },
     },
   });
@@ -63,9 +65,9 @@ export function InvoiceDetail() {
   if (!invoice) {
     return (
       <div className="py-16 text-center">
-        <p className="text-muted-foreground">Factura no encontrada</p>
+        <p className="text-muted-foreground">{t("invoiceDetail.notFound")}</p>
         <Link href="/invoices">
-          <Button className="mt-4" variant="outline" data-testid="button-back-not-found">Volver</Button>
+          <Button className="mt-4" variant="outline" data-testid="button-back-not-found">{t("invoiceDetail.back")}</Button>
         </Link>
       </div>
     );
@@ -102,20 +104,20 @@ export function InvoiceDetail() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Eliminar factura</AlertDialogTitle>
+              <AlertDialogTitle>{t("invoiceDetail.deleteTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                Esta accion no se puede deshacer. La factura sera eliminada permanentemente.
+                {t("invoiceDetail.deleteDesc")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel data-testid="button-cancel-delete-detail">Cancelar</AlertDialogCancel>
+              <AlertDialogCancel data-testid="button-cancel-delete-detail">{t("common.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive text-destructive-foreground"
                 onClick={() => deleteMutation.mutate({ id: invoice.id })}
                 disabled={deleteMutation.isPending}
                 data-testid="button-confirm-delete-detail"
               >
-                Eliminar
+                {t("invoiceDetail.delete")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -130,7 +132,7 @@ export function InvoiceDetail() {
               <div className="flex items-start gap-3">
                 <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Fecha de Compra</p>
+                  <p className="text-xs text-muted-foreground">{t("invoiceDetail.purchaseDate")}</p>
                   <p className="text-sm font-medium" data-testid="text-invoice-date">{formatDate(invoice.date)}</p>
                 </div>
               </div>
@@ -138,7 +140,7 @@ export function InvoiceDetail() {
                 <div className="flex items-start gap-3">
                   <Hash className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Numero de Factura</p>
+                    <p className="text-xs text-muted-foreground">{t("invoiceDetail.invoiceNumber")}</p>
                     <p className="text-sm font-medium" data-testid="text-invoice-number">{invoice.invoiceNumber}</p>
                   </div>
                 </div>
@@ -146,7 +148,7 @@ export function InvoiceDetail() {
               <div className="flex items-start gap-3">
                 <Store className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Proveedor</p>
+                  <p className="text-xs text-muted-foreground">{t("invoiceDetail.supplier")}</p>
                   <p className="text-sm font-medium" data-testid="text-invoice-supplier">{invoice.supplier}</p>
                 </div>
               </div>
@@ -154,7 +156,7 @@ export function InvoiceDetail() {
                 <div className="flex items-start gap-3">
                   <User className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Comprador</p>
+                    <p className="text-xs text-muted-foreground">{t("invoiceDetail.buyer")}</p>
                     <p className="text-sm font-medium" data-testid="text-invoice-buyer">{invoice.buyer}</p>
                   </div>
                 </div>
@@ -163,7 +165,7 @@ export function InvoiceDetail() {
                 <div className="flex items-start gap-3">
                   <AlignLeft className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Descripción</p>
+                    <p className="text-xs text-muted-foreground">{t("invoiceDetail.description")}</p>
                     <p className="text-sm" data-testid="text-invoice-description">{invoice.description}</p>
                   </div>
                 </div>
@@ -172,7 +174,7 @@ export function InvoiceDetail() {
                 <div className="flex items-start gap-3">
                   <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Notas</p>
+                    <p className="text-xs text-muted-foreground">{t("invoiceDetail.notes")}</p>
                     <p className="text-sm" data-testid="text-invoice-notes">{invoice.notes}</p>
                   </div>
                 </div>
@@ -184,7 +186,7 @@ export function InvoiceDetail() {
         <Card>
           <CardContent className="pt-6 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Total de Compra (COP)</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("invoiceDetail.totalPurchase")}</p>
               <p className="text-4xl font-bold text-foreground" data-testid="text-invoice-total">
                 {formatCurrency(invoice.totalAmount)}
               </p>
@@ -197,7 +199,7 @@ export function InvoiceDetail() {
       {invoice.imageBase64 && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Imagen de la Factura</CardTitle>
+            <CardTitle className="text-base">{t("invoiceDetail.invoiceImage")}</CardTitle>
             <a
               href={`data:image/jpeg;base64,${invoice.imageBase64}`}
               download={`factura-${invoice.id}-${invoice.supplier.replace(/\s+/g, "_")}.jpg`}
@@ -205,14 +207,14 @@ export function InvoiceDetail() {
             >
               <Button variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
-                Descargar
+                {t("invoiceDetail.download")}
               </Button>
             </a>
           </CardHeader>
           <CardContent>
             <img
               src={`data:image/jpeg;base64,${invoice.imageBase64}`}
-              alt="Factura"
+              alt={t("invoiceDetail.invoiceImage")}
               className="w-full max-h-96 object-contain rounded border border-border"
               data-testid="img-invoice-original"
             />
@@ -224,18 +226,18 @@ export function InvoiceDetail() {
       {invoice.items && invoice.items.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Articulos / Servicios</CardTitle>
+            <CardTitle className="text-base">{t("invoiceDetail.items")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="table-invoice-items">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left pb-2 font-medium text-muted-foreground">Descripcion</th>
-                    <th className="text-right pb-2 font-medium text-muted-foreground">Cant.</th>
-                    <th className="text-left pb-2 font-medium text-muted-foreground">Unidad</th>
-                    <th className="text-right pb-2 font-medium text-muted-foreground">P. Unit.</th>
-                    <th className="text-right pb-2 font-medium text-muted-foreground">Total</th>
+                    <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemDescription")}</th>
+                    <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemQty")}</th>
+                    <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemUnit")}</th>
+                    <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemUnitPrice")}</th>
+                    <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemTotal")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -252,7 +254,7 @@ export function InvoiceDetail() {
                 {invoice.totalAmount != null && (
                   <tfoot>
                     <tr className="border-t border-border">
-                      <td colSpan={4} className="pt-3 text-right font-semibold">Total Factura:</td>
+                      <td colSpan={4} className="pt-3 text-right font-semibold">{t("invoiceDetail.invoiceTotal")}</td>
                       <td className="pt-3 text-right font-bold">{formatCurrency(invoice.totalAmount)}</td>
                     </tr>
                   </tfoot>
@@ -265,7 +267,7 @@ export function InvoiceDetail() {
 
       <div className="flex justify-end">
         <p className="text-xs text-muted-foreground">
-          Registrada el {formatDate(invoice.createdAt)}
+          {t("invoiceDetail.registeredOn")} {formatDate(invoice.createdAt)}
         </p>
       </div>
     </div>

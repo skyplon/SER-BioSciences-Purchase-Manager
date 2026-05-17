@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { BUYER_OPTIONS } from "@/lib/buyers";
 import { Link } from "wouter";
+import { useT } from "@/lib/i18n";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -77,17 +78,18 @@ export function InvoiceNew() {
   const [validating, setValidating] = useState(false);
   const [completing, setCompleting] = useState(false);
 
+  const t = useT();
   const extractMutation = useExtractInvoiceData();
   const validateMutation = useValidateInvoiceData();
   const createMutation = useCreateInvoice({
     mutation: {
       onSuccess: (invoice) => {
         queryClient.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
-        toast({ title: "Factura guardada correctamente" });
+        toast({ title: t("invoiceNew.savedOk") });
         setLocation(`/invoices/${invoice.id}`);
       },
       onError: () => {
-        toast({ title: "Error al guardar la factura", variant: "destructive" });
+        toast({ title: t("invoiceNew.saveError"), variant: "destructive" });
       },
     },
   });
@@ -123,7 +125,7 @@ export function InvoiceNew() {
       setDocxName(null);
       handleExtract(base64);
     } catch {
-      toast({ title: "Error al procesar el PDF", variant: "destructive" });
+      toast({ title: t("invoiceNew.pdfError"), variant: "destructive" });
     }
   };
 
@@ -133,7 +135,7 @@ export function InvoiceNew() {
       const result = await mammoth.extractRawText({ arrayBuffer });
       const text = result.value.trim();
       if (!text) {
-        toast({ title: "No se pudo extraer texto del documento Word", variant: "destructive" });
+        toast({ title: t("invoiceNew.wordNoText"), variant: "destructive" });
         return;
       }
       setDocxName(file.name);
@@ -171,9 +173,9 @@ export function InvoiceNew() {
         })));
       }
       setExtracted(true);
-      toast({ title: "Datos extraídos del documento Word. Revisa y corrige si es necesario." });
+      toast({ title: t("invoiceNew.wordExtracted") });
     } catch {
-      toast({ title: "Error al procesar el documento Word", variant: "destructive" });
+      toast({ title: t("invoiceNew.wordError"), variant: "destructive" });
     } finally {
       setExtracting(false);
     }
@@ -204,9 +206,9 @@ export function InvoiceNew() {
         );
       }
       setExtracted(true);
-      toast({ title: "Datos extraidos correctamente. Revisa y corrige si es necesario." });
+      toast({ title: t("invoiceNew.extractedOk") });
     } catch {
-      toast({ title: "Error al extraer datos de la imagen", variant: "destructive" });
+      toast({ title: t("invoiceNew.extractError"), variant: "destructive" });
     } finally {
       setExtracting(false);
     }
@@ -254,9 +256,9 @@ export function InvoiceNew() {
           }))
         );
       }
-      toast({ title: "Validación completada. Campos corregidos y estandarizados." });
+      toast({ title: t("invoiceNew.validateOk") });
     } catch {
-      toast({ title: "Error al validar los datos", variant: "destructive" });
+      toast({ title: t("invoiceNew.validateError"), variant: "destructive" });
     } finally {
       setValidating(false);
     }
@@ -341,9 +343,9 @@ export function InvoiceNew() {
           }))
         );
       }
-      toast({ title: "Campos completados y corregidos con IA." });
+      toast({ title: t("invoiceNew.completeOk") });
     } catch {
-      toast({ title: "Error al completar los datos con IA", variant: "destructive" });
+      toast({ title: t("invoiceNew.completeError"), variant: "destructive" });
     } finally {
       setCompleting(false);
     }
@@ -408,15 +410,15 @@ export function InvoiceNew() {
           </Button>
         </Link>
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Nueva Factura</h2>
-          <p className="text-sm text-muted-foreground">Captura o carga una foto de la factura</p>
+          <h2 className="text-2xl font-bold text-foreground">{t("invoiceNew.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("invoiceNew.subtitle")}</p>
         </div>
       </div>
 
       {/* Image capture */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Factura (Imagen, PDF o Word)</CardTitle>
+          <CardTitle className="text-base">{t("invoiceNew.fileSection")}</CardTitle>
         </CardHeader>
         <CardContent>
           {imagePreview ? (
@@ -432,7 +434,7 @@ export function InvoiceNew() {
                   <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded">
                     <div className="text-center">
                       <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Extrayendo datos...</p>
+                      <p className="text-sm text-muted-foreground">{t("invoiceNew.extracting")}</p>
                     </div>
                   </div>
                 )}
@@ -440,7 +442,7 @@ export function InvoiceNew() {
               {extracted && (
                 <div className="flex items-center gap-2 text-sm text-green-600">
                   <CheckCircle className="h-4 w-4" />
-                  Datos extraídos automáticamente. Revisa y corrige si es necesario.
+                  {t("invoiceNew.extracted")}
                 </div>
               )}
               <Button
@@ -449,7 +451,7 @@ export function InvoiceNew() {
                 onClick={() => { setImageBase64(null); setImagePreview(null); setExtracted(false); }}
                 data-testid="button-remove-image"
               >
-                Cambiar archivo
+                {t("invoiceNew.changeFile")}
               </Button>
             </div>
           ) : docxName ? (
@@ -458,14 +460,14 @@ export function InvoiceNew() {
                 <FileType className="h-8 w-8 text-blue-500 flex-shrink-0" />
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{docxName}</p>
-                  <p className="text-xs text-muted-foreground">Documento Word</p>
+                  <p className="text-xs text-muted-foreground">{t("invoiceNew.wordDoc")}</p>
                 </div>
                 {extracting && <Loader2 className="h-4 w-4 animate-spin text-primary ml-auto" />}
               </div>
               {extracted && (
                 <div className="flex items-center gap-2 text-sm text-green-600">
                   <CheckCircle className="h-4 w-4" />
-                  Datos extraídos automáticamente. Revisa y corrige si es necesario.
+                  {t("invoiceNew.extracted")}
                 </div>
               )}
               <Button
@@ -474,7 +476,7 @@ export function InvoiceNew() {
                 onClick={() => { setDocxName(null); setExtracted(false); }}
                 data-testid="button-remove-image"
               >
-                Cambiar archivo
+                {t("invoiceNew.changeFile")}
               </Button>
             </div>
           ) : (
@@ -486,7 +488,7 @@ export function InvoiceNew() {
                 data-testid="button-camera-capture"
               >
                 <Camera className="h-6 w-6" />
-                <span className="text-xs">Tomar Foto</span>
+                <span className="text-xs">{t("invoiceNew.takePhoto")}</span>
               </Button>
               <Button
                 variant="outline"
@@ -495,7 +497,7 @@ export function InvoiceNew() {
                 data-testid="button-upload-image"
               >
                 <Upload className="h-6 w-6" />
-                <span className="text-xs">Cargar Imagen</span>
+                <span className="text-xs">{t("invoiceNew.uploadImage")}</span>
               </Button>
               <Button
                 variant="outline"
@@ -504,7 +506,7 @@ export function InvoiceNew() {
                 data-testid="button-upload-pdf"
               >
                 <FileText className="h-6 w-6 text-red-500" />
-                <span className="text-xs">Cargar PDF</span>
+                <span className="text-xs">{t("invoiceNew.uploadPdf")}</span>
               </Button>
               <Button
                 variant="outline"
@@ -513,7 +515,7 @@ export function InvoiceNew() {
                 data-testid="button-upload-word"
               >
                 <FileType className="h-6 w-6 text-blue-500" />
-                <span className="text-xs">Cargar Word</span>
+                <span className="text-xs">{t("invoiceNew.uploadWord")}</span>
               </Button>
             </div>
           )}
@@ -569,38 +571,38 @@ export function InvoiceNew() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            Datos de la Factura
+            {t("invoiceNew.dataSection")}
             {extracting && <Skeleton className="h-5 w-5 rounded-full" />}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="supplier">Proveedor *</Label>
+              <Label htmlFor="supplier">{t("invoiceNew.supplier")} *</Label>
               <Input
                 id="supplier"
                 value={supplier}
                 onChange={(e) => setSupplier(e.target.value)}
-                placeholder="Nombre de la ferreteria o tienda"
+                placeholder={t("invoiceNew.supplierPlaceholder")}
                 data-testid="input-supplier"
                 className={cn(showErrors && !supplier.trim() && "border-red-500 focus-visible:ring-red-500")}
               />
-              {showErrors && !supplier.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
+              {showErrors && !supplier.trim() && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="invoiceNumber">Numero de Factura *</Label>
+              <Label htmlFor="invoiceNumber">{t("invoiceNew.invoiceNumber")} *</Label>
               <Input
                 id="invoiceNumber"
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
-                placeholder="Ej: 001-2024"
+                placeholder={t("invoiceNew.invoiceNumberPlaceholder")}
                 data-testid="input-invoice-number"
                 className={cn(showErrors && !invoiceNumber.trim() && "border-red-500 focus-visible:ring-red-500")}
               />
-              {showErrors && !invoiceNumber.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
+              {showErrors && !invoiceNumber.trim() && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="date">Fecha de Compra *</Label>
+              <Label htmlFor="date">{t("invoiceNew.purchaseDate")} *</Label>
               <Input
                 id="date"
                 type="date"
@@ -609,10 +611,10 @@ export function InvoiceNew() {
                 data-testid="input-date"
                 className={cn(showErrors && !date && "border-red-500 focus-visible:ring-red-500")}
               />
-              {showErrors && !date && <p className="text-xs text-red-500">Campo requerido</p>}
+              {showErrors && !date && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="category">Categoria *</Label>
+              <Label htmlFor="category">{t("invoiceNew.category")} *</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger id="category" data-testid="select-category">
                   <SelectValue />
@@ -625,14 +627,14 @@ export function InvoiceNew() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="buyer">Comprador *</Label>
+              <Label htmlFor="buyer">{t("invoiceNew.buyer")} *</Label>
               <Select value={buyer} onValueChange={setBuyer}>
                 <SelectTrigger
                   id="buyer"
                   data-testid="select-buyer"
                   className={cn(showErrors && !buyer && "border-red-500 focus-visible:ring-red-500")}
                 >
-                  <SelectValue placeholder="Seleccionar..." />
+                  <SelectValue placeholder={t("common.search")} />
                 </SelectTrigger>
                 <SelectContent>
                   {BUYER_OPTIONS.map((b) => (
@@ -640,28 +642,28 @@ export function InvoiceNew() {
                   ))}
                 </SelectContent>
               </Select>
-              {showErrors && !buyer && <p className="text-xs text-red-500">Campo requerido</p>}
+              {showErrors && !buyer && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="totalAmount">Total (pesos colombianos) *</Label>
+              <Label htmlFor="totalAmount">{t("invoiceNew.total")} *</Label>
               <Input
                 id="totalAmount"
                 type="number"
                 value={totalAmount}
                 onChange={(e) => setTotalAmount(e.target.value)}
-                placeholder="Ej: 85000"
+                placeholder={t("invoiceNew.totalPlaceholder")}
                 data-testid="input-total-amount"
                 className={cn(showErrors && !totalAmount && "border-red-500 focus-visible:ring-red-500")}
               />
-              {showErrors && !totalAmount && <p className="text-xs text-red-500">Campo requerido</p>}
+              {showErrors && !totalAmount && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
             </div>
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="description">Descripción *</Label>
+              <Label htmlFor="description">{t("invoiceNew.description")} *</Label>
               {extracting && (
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Generando...
+                  <Loader2 className="h-3 w-3 animate-spin" /> {t("invoiceNew.generatingDesc")}
                 </span>
               )}
             </div>
@@ -669,25 +671,25 @@ export function InvoiceNew() {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="El modelo de IA generará una descripción automáticamente al cargar la foto"
+              placeholder={t("invoiceNew.descriptionPlaceholder")}
               rows={3}
               data-testid="input-description"
               className={cn(showErrors && !description.trim() && "border-red-500 focus-visible:ring-red-500")}
             />
-            {showErrors && !description.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
+            {showErrors && !description.trim() && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="notes">Notas *</Label>
+            <Label htmlFor="notes">{t("invoiceNew.notes")} *</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Observaciones adicionales, información adicional de la factura, condiciones de pago, etc."
+              placeholder={t("invoiceNew.notesPlaceholder")}
               rows={4}
               data-testid="input-notes"
               className={cn("resize-y", showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
             />
-            {showErrors && !notes.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
+            {showErrors && !notes.trim() && <p className="text-xs text-red-500">{t("invoiceNew.required")}</p>}
           </div>
         </CardContent>
       </Card>
@@ -695,7 +697,7 @@ export function InvoiceNew() {
       {/* Items */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Articulos / Servicios</CardTitle>
+          <CardTitle className="text-base">{t("invoiceNew.items")}</CardTitle>
           <Badge variant="outline">{items.filter((i) => i.name.trim() || i.description.trim()).length} items</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -703,12 +705,12 @@ export function InvoiceNew() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left pb-2 font-medium text-muted-foreground min-w-[140px]">Nombre Artículo</th>
-                  <th className="text-left pb-2 font-medium text-muted-foreground min-w-[160px]">Descripción Completa</th>
-                  <th className="text-left pb-2 font-medium text-muted-foreground w-20">Cant.</th>
-                  <th className="text-left pb-2 font-medium text-muted-foreground w-20">Unidad</th>
-                  <th className="text-left pb-2 font-medium text-muted-foreground w-24">P. Unit.</th>
-                  <th className="text-left pb-2 font-medium text-muted-foreground w-24">Total</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground min-w-[140px]">{t("invoiceNew.itemName")}</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground min-w-[160px]">{t("invoiceNew.itemDescription")}</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground w-20">{t("invoiceNew.itemQty")}</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground w-20">{t("invoiceNew.itemUnit")}</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground w-24">{t("invoiceNew.itemUnitPrice")}</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground w-24">{t("invoiceNew.itemTotal")}</th>
                   <th className="w-8"></th>
                 </tr>
               </thead>
@@ -722,7 +724,7 @@ export function InvoiceNew() {
                       <Input
                         value={item.name}
                         onChange={(e) => updateItem(idx, "name", e.target.value)}
-                        placeholder="Ej: Jeringa 5ml"
+                        placeholder={t("invoiceNew.itemNamePlaceholder")}
                         data-testid={`input-item-name-${idx}`}
                         className={cn(showItemErr && !item.name.trim() && "border-red-500 focus-visible:ring-red-500")}
                       />
@@ -731,7 +733,7 @@ export function InvoiceNew() {
                       <Input
                         value={item.description}
                         onChange={(e) => updateItem(idx, "description", e.target.value)}
-                        placeholder="Descripcion completa de la factura"
+                        placeholder={t("invoiceNew.itemDescPlaceholder")}
                         data-testid={`input-item-description-${idx}`}
                         className={cn(showItemErr && !item.description.trim() && "border-red-500 focus-visible:ring-red-500")}
                       />
@@ -796,14 +798,14 @@ export function InvoiceNew() {
           </div>
           <Button variant="outline" size="sm" onClick={addItem} data-testid="button-add-item">
             <Plus className="h-4 w-4 mr-2" />
-            Agregar articulo
+            {t("invoiceNew.addItem")}
           </Button>
         </CardContent>
       </Card>
 
       <div className="flex items-center gap-3 justify-end flex-wrap">
         <Link href="/invoices">
-          <Button variant="outline" data-testid="button-cancel-new">Cancelar</Button>
+          <Button variant="outline" data-testid="button-cancel-new">{t("invoiceNew.cancel")}</Button>
         </Link>
         <Button
           variant="outline"
@@ -816,7 +818,7 @@ export function InvoiceNew() {
           ) : (
             <Wand2 className="h-4 w-4 mr-2" />
           )}
-          Completar con IA
+          {t("invoiceNew.completeAI")}
         </Button>
         <Button
           variant="outline"
@@ -829,7 +831,7 @@ export function InvoiceNew() {
           ) : (
             <ShieldCheck className="h-4 w-4 mr-2" />
           )}
-          Validar con IA
+          {t("invoiceNew.validateAI")}
         </Button>
         <Button
           onClick={handleSave}
@@ -837,7 +839,7 @@ export function InvoiceNew() {
           data-testid="button-save-invoice"
         >
           {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          Guardar Factura
+          {t("invoiceNew.saveInvoice")}
         </Button>
       </div>
     </div>
