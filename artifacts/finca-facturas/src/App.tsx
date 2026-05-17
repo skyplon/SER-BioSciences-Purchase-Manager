@@ -126,27 +126,19 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function AppRouter() {
-  return (
-    <Show when="signed-in">
-      <Layout>
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/invoices" component={InvoicesList} />
-          <Route path="/invoices/new" component={InvoiceNew} />
-          <Route path="/invoices/:id" component={InvoiceDetail} />
-          <Route component={NotFound} />
-        </Switch>
-      </Layout>
-    </Show>
-  );
-}
-
-function HomeRedirect() {
+function AuthGuard() {
   return (
     <>
       <Show when="signed-in">
-        <Redirect to="/invoices" />
+        <Layout>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/invoices" component={InvoicesList} />
+            <Route path="/invoices/new" component={InvoiceNew} />
+            <Route path="/invoices/:id" component={InvoiceDetail} />
+            <Route component={NotFound} />
+          </Switch>
+        </Layout>
       </Show>
       <Show when="signed-out">
         <Redirect to="/sign-in" />
@@ -186,13 +178,9 @@ function ClerkProviderWithRoutes() {
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
           <Switch>
-            <Route path="/" component={HomeRedirect} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
-            <Route path="/invoices" component={AppRouter} />
-            <Route path="/invoices/new" component={AppRouter} />
-            <Route path="/invoices/:id" component={AppRouter} />
-            <Route component={AppRouter} />
+            <Route component={AuthGuard} />
           </Switch>
           <Toaster />
         </TooltipProvider>
