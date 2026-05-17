@@ -130,7 +130,7 @@ export function InvoiceDetail() {
               <div className="flex items-start gap-3">
                 <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Fecha</p>
+                  <p className="text-xs text-muted-foreground">Fecha de Compra</p>
                   <p className="text-sm font-medium" data-testid="text-invoice-date">{formatDate(invoice.date)}</p>
                 </div>
               </div>
@@ -175,7 +175,7 @@ export function InvoiceDetail() {
         <Card>
           <CardContent className="pt-6 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Total</p>
+              <p className="text-xs text-muted-foreground mb-1">Total de Compra (COP)</p>
               <p className="text-4xl font-bold text-foreground" data-testid="text-invoice-total">
                 {formatCurrency(invoice.totalAmount)}
               </p>

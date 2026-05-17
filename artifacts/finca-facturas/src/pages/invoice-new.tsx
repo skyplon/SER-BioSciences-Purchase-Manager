@@ -292,7 +292,7 @@ export function InvoiceNew() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="date">Fecha</Label>
+              <Label htmlFor="date">Fecha de Compra</Label>
               <Input
                 id="date"
                 type="date"
@@ -328,13 +328,13 @@ export function InvoiceNew() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="totalAmount">Total</Label>
+              <Label htmlFor="totalAmount">Total (pesos colombianos)</Label>
               <Input
                 id="totalAmount"
                 type="number"
                 value={totalAmount}
                 onChange={(e) => setTotalAmount(e.target.value)}
-                placeholder="0"
+                placeholder="Ej: 85000"
                 data-testid="input-total-amount"
               />
             </div>

@@ -59,7 +59,7 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
       "Notas": {
         rich_text: [{ text: { content: invoice.notes ?? "" } }],
       },
-      "Fecha de registro": {
+      "Fecha de Creación": {
         date: { start: invoice.createdAt.toISOString().split("T")[0] },
       },
       ...(invoice.buyer
