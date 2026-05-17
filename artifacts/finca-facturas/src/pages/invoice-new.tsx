@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
@@ -60,7 +61,7 @@ export function InvoiceNew() {
   const [items, setItems] = useState<ItemRow[]>([emptyItem()]);
   const [extracting, setExtracting] = useState(false);
   const [extracted, setExtracted] = useState(false);
-
+  const [showErrors, setShowErrors] = useState(false);
   const [validating, setValidating] = useState(false);
 
   const extractMutation = useExtractInvoiceData();
@@ -185,32 +186,51 @@ export function InvoiceNew() {
     setItems(items.filter((_, i) => i !== idx));
   };
 
+  const isItemValid = (item: ItemRow) =>
+    item.name.trim() && item.description.trim() && item.quantity && item.unit.trim() && item.unitPrice && item.totalPrice;
+
   const handleSave = () => {
-    if (!supplier.trim()) {
-      toast({ title: "El proveedor es requerido", variant: "destructive" });
+    setShowErrors(true);
+
+    const headerInvalid =
+      !supplier.trim() ||
+      !invoiceNumber.trim() ||
+      !date ||
+      !buyer ||
+      !totalAmount ||
+      !description.trim() ||
+      !notes.trim();
+
+    const validItems = items.filter((i) => i.name.trim() || i.description.trim());
+    const itemsInvalid = validItems.length === 0 || validItems.some((i) => !isItemValid(i));
+
+    if (headerInvalid || itemsInvalid) {
+      toast({
+        title: "Campos incompletos",
+        description: "Completa todos los campos obligatorios antes de guardar.",
+        variant: "destructive",
+      });
       return;
     }
-
-    const filteredItems = items.filter((item) => item.name.trim() || item.description.trim());
 
     createMutation.mutate({
       data: {
         supplier: supplier.trim(),
-        invoiceNumber: invoiceNumber.trim() || null,
-        date: date || null,
+        invoiceNumber: invoiceNumber.trim(),
+        date,
         category,
-        totalAmount: totalAmount ? parseFloat(totalAmount) : null,
+        totalAmount: parseFloat(totalAmount),
         imageBase64: imageBase64 || null,
-        description: description.trim() || null,
-        notes: notes.trim() || null,
-        buyer: buyer || null,
-        items: filteredItems.map((item) => ({
-          name: item.name.trim() || item.description.trim(),
-          description: item.description.trim() || item.name.trim(),
-          quantity: item.quantity ? parseFloat(item.quantity) : null,
-          unit: item.unit.trim() || null,
-          unitPrice: item.unitPrice ? parseFloat(item.unitPrice) : null,
-          totalPrice: item.totalPrice ? parseFloat(item.totalPrice) : null,
+        description: description.trim(),
+        notes: notes.trim(),
+        buyer,
+        items: validItems.map((item) => ({
+          name: item.name.trim(),
+          description: item.description.trim(),
+          quantity: parseFloat(item.quantity),
+          unit: item.unit.trim(),
+          unitPrice: parseFloat(item.unitPrice),
+          totalPrice: parseFloat(item.totalPrice),
         })),
       },
     });
@@ -339,30 +359,36 @@ export function InvoiceNew() {
                 onChange={(e) => setSupplier(e.target.value)}
                 placeholder="Nombre de la ferreteria o tienda"
                 data-testid="input-supplier"
+                className={cn(showErrors && !supplier.trim() && "border-red-500 focus-visible:ring-red-500")}
               />
+              {showErrors && !supplier.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="invoiceNumber">Numero de Factura</Label>
+              <Label htmlFor="invoiceNumber">Numero de Factura *</Label>
               <Input
                 id="invoiceNumber"
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
                 placeholder="Ej: 001-2024"
                 data-testid="input-invoice-number"
+                className={cn(showErrors && !invoiceNumber.trim() && "border-red-500 focus-visible:ring-red-500")}
               />
+              {showErrors && !invoiceNumber.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="date">Fecha de Compra</Label>
+              <Label htmlFor="date">Fecha de Compra *</Label>
               <Input
                 id="date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 data-testid="input-date"
+                className={cn(showErrors && !date && "border-red-500 focus-visible:ring-red-500")}
               />
+              {showErrors && !date && <p className="text-xs text-red-500">Campo requerido</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="category">Categoria</Label>
+              <Label htmlFor="category">Categoria *</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger id="category" data-testid="select-category">
                   <SelectValue />
@@ -375,9 +401,13 @@ export function InvoiceNew() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="buyer">Comprador</Label>
+              <Label htmlFor="buyer">Comprador *</Label>
               <Select value={buyer} onValueChange={setBuyer}>
-                <SelectTrigger id="buyer" data-testid="select-buyer">
+                <SelectTrigger
+                  id="buyer"
+                  data-testid="select-buyer"
+                  className={cn(showErrors && !buyer && "border-red-500 focus-visible:ring-red-500")}
+                >
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -386,9 +416,10 @@ export function InvoiceNew() {
                   ))}
                 </SelectContent>
               </Select>
+              {showErrors && !buyer && <p className="text-xs text-red-500">Campo requerido</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="totalAmount">Total (pesos colombianos)</Label>
+              <Label htmlFor="totalAmount">Total (pesos colombianos) *</Label>
               <Input
                 id="totalAmount"
                 type="number"
@@ -396,12 +427,14 @@ export function InvoiceNew() {
                 onChange={(e) => setTotalAmount(e.target.value)}
                 placeholder="Ej: 85000"
                 data-testid="input-total-amount"
+                className={cn(showErrors && !totalAmount && "border-red-500 focus-visible:ring-red-500")}
               />
+              {showErrors && !totalAmount && <p className="text-xs text-red-500">Campo requerido</p>}
             </div>
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="description">Descripción</Label>
+              <Label htmlFor="description">Descripción *</Label>
               {extracting && (
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Loader2 className="h-3 w-3 animate-spin" /> Generando...
@@ -415,10 +448,12 @@ export function InvoiceNew() {
               placeholder="El modelo de IA generará una descripción automáticamente al cargar la foto"
               rows={3}
               data-testid="input-description"
+              className={cn(showErrors && !description.trim() && "border-red-500 focus-visible:ring-red-500")}
             />
+            {showErrors && !description.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="notes">Notas</Label>
+            <Label htmlFor="notes">Notas *</Label>
             <Textarea
               id="notes"
               value={notes}
@@ -426,7 +461,9 @@ export function InvoiceNew() {
               placeholder="Observaciones adicionales"
               rows={2}
               data-testid="input-notes"
+              className={cn(showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
             />
+            {showErrors && !notes.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
           </div>
         </CardContent>
       </Card>
@@ -452,7 +489,10 @@ export function InvoiceNew() {
                 </tr>
               </thead>
               <tbody className="space-y-2" data-testid="table-items">
-                {items.map((item, idx) => (
+                {items.map((item, idx) => {
+                  const hasContent = item.name.trim() || item.description.trim();
+                  const showItemErr = showErrors && hasContent;
+                  return (
                   <tr key={idx} data-testid={`row-item-${idx}`}>
                     <td className="pr-2 py-1">
                       <Input
@@ -460,6 +500,7 @@ export function InvoiceNew() {
                         onChange={(e) => updateItem(idx, "name", e.target.value)}
                         placeholder="Ej: Jeringa 5ml"
                         data-testid={`input-item-name-${idx}`}
+                        className={cn(showItemErr && !item.name.trim() && "border-red-500 focus-visible:ring-red-500")}
                       />
                     </td>
                     <td className="pr-2 py-1">
@@ -468,6 +509,7 @@ export function InvoiceNew() {
                         onChange={(e) => updateItem(idx, "description", e.target.value)}
                         placeholder="Descripcion completa de la factura"
                         data-testid={`input-item-description-${idx}`}
+                        className={cn(showItemErr && !item.description.trim() && "border-red-500 focus-visible:ring-red-500")}
                       />
                     </td>
                     <td className="pr-2 py-1">
@@ -477,6 +519,7 @@ export function InvoiceNew() {
                         onChange={(e) => updateItem(idx, "quantity", e.target.value)}
                         placeholder="0"
                         data-testid={`input-item-quantity-${idx}`}
+                        className={cn(showItemErr && !item.quantity && "border-red-500 focus-visible:ring-red-500")}
                       />
                     </td>
                     <td className="pr-2 py-1">
@@ -485,6 +528,7 @@ export function InvoiceNew() {
                         onChange={(e) => updateItem(idx, "unit", e.target.value)}
                         placeholder="und"
                         data-testid={`input-item-unit-${idx}`}
+                        className={cn(showItemErr && !item.unit.trim() && "border-red-500 focus-visible:ring-red-500")}
                       />
                     </td>
                     <td className="pr-2 py-1">
@@ -494,6 +538,7 @@ export function InvoiceNew() {
                         onChange={(e) => updateItem(idx, "unitPrice", e.target.value)}
                         placeholder="0"
                         data-testid={`input-item-unit-price-${idx}`}
+                        className={cn(showItemErr && !item.unitPrice && "border-red-500 focus-visible:ring-red-500")}
                       />
                     </td>
                     <td className="pr-2 py-1">
@@ -503,6 +548,7 @@ export function InvoiceNew() {
                         onChange={(e) => updateItem(idx, "totalPrice", e.target.value)}
                         placeholder="0"
                         data-testid={`input-item-total-price-${idx}`}
+                        className={cn(showItemErr && !item.totalPrice && "border-red-500 focus-visible:ring-red-500")}
                       />
                     </td>
                     <td className="py-1">
@@ -519,7 +565,8 @@ export function InvoiceNew() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
