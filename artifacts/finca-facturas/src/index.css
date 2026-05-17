@@ -76,56 +76,57 @@
     --elevate-1: rgba(0,0,0, .03);
     --elevate-2: rgba(0,0,0, .08);
 
-    /* Warm earthy colors */
-    --background: 40 33% 98%; /* warm off-white #FAF8F5 */
-    --foreground: 20 14% 16%; /* deep brown/black */
-    --border: 30 20% 90%; /* warm light grey */
+    /* SER BioSciences palette */
+    --background: 200 18% 98%;        /* cool off-white */
+    --foreground: 210 30% 16%;        /* dark navy charcoal */
+    --border: 200 16% 88%;            /* cool light grey */
 
     --card: 0 0% 100%;
-    --card-foreground: 20 14% 16%;
-    --card-border: 30 20% 90%;
+    --card-foreground: 210 30% 16%;
+    --card-border: 200 16% 88%;
 
-    --sidebar: 40 33% 98%;
-    --sidebar-foreground: 20 14% 16%;
-    --sidebar-border: 30 20% 90%;
-    --sidebar-primary: 135 30% 30%; /* forest green */
+    --sidebar: 200 18% 98%;
+    --sidebar-foreground: 210 30% 16%;
+    --sidebar-border: 200 16% 88%;
+    --sidebar-primary: 188 30% 42%;   /* muted teal */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 20% 90%;
-    --sidebar-accent-foreground: 20 14% 16%;
-    --sidebar-ring: 135 30% 30%;
+    --sidebar-accent: 200 16% 92%;
+    --sidebar-accent-foreground: 210 30% 16%;
+    --sidebar-ring: 188 30% 42%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 14% 16%;
-    --popover-border: 30 20% 90%;
+    --popover-foreground: 210 30% 16%;
+    --popover-border: 200 16% 88%;
 
-    --primary: 135 30% 30%; /* Earthy forest green */
+    --primary: 188 30% 42%;           /* Muted teal — SER brand */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 25% 94%;
-    --secondary-foreground: 20 14% 16%;
+    --secondary: 200 16% 94%;
+    --secondary-foreground: 210 30% 16%;
 
-    --muted: 30 20% 96%;
-    --muted-foreground: 25 10% 40%;
+    --muted: 200 14% 96%;
+    --muted-foreground: 210 12% 42%;  /* mid navy-grey */
 
-    --accent: 25 50% 50%; /* Terracotta / Burnt Orange */
-    --accent-foreground: 0 0% 100%;
+    --accent: 73 42% 50%;             /* Pale chartreuse — brand accent */
+    --accent-foreground: 210 30% 16%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --input: 30 20% 86%;
-    --ring: 135 30% 30%;
-    
-    --chart-1: 135 30% 40%;
-    --chart-2: 25 50% 50%;
-    --chart-3: 40 40% 60%;
-    --chart-4: 200 30% 50%;
-    --chart-5: 0 0% 50%;
+    --input: 200 16% 88%;
+    --ring: 188 30% 42%;
+
+    /* Chart colors mapped to brand palette */
+    --chart-1: 188 30% 44%;           /* teal */
+    --chart-2: 125 18% 50%;           /* sage green */
+    --chart-3: 73 42% 50%;            /* chartreuse */
+    --chart-4: 210 25% 40%;           /* muted navy */
+    --chart-5: 200 20% 65%;           /* light teal-grey */
 
     --app-font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
     --app-font-serif: 'Fraunces', Georgia, serif;
     --app-font-mono: 'Space Mono', monospace;
-    
+
     --radius: 0.5rem;
     --shadow-2xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
     --shadow-xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
@@ -135,7 +136,7 @@
     --shadow-lg: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 8px 10px -6px rgba(0, 0, 0, 0.1);
     --shadow-2xl: 0px 25px 50px -12px rgba(0, 0, 0, 0.25);
-    
+
     --tracking-normal: 0em;
     --spacing: 0.25rem;
 
@@ -156,44 +157,44 @@
     --elevate-1: rgba(255,255,255, .04);
     --elevate-2: rgba(255,255,255, .09);
 
-    --background: 20 14% 12%;
-    --foreground: 40 33% 98%;
-    --border: 20 10% 25%;
+    --background: 210 30% 10%;
+    --foreground: 200 18% 96%;
+    --border: 210 18% 22%;
 
-    --card: 20 14% 14%;
-    --card-foreground: 40 33% 98%;
-    --card-border: 20 10% 25%;
+    --card: 210 28% 12%;
+    --card-foreground: 200 18% 96%;
+    --card-border: 210 18% 22%;
 
-    --sidebar: 20 14% 12%;
-    --sidebar-foreground: 40 33% 98%;
-    --sidebar-border: 20 10% 25%;
-    --sidebar-primary: 135 30% 40%;
+    --sidebar: 210 30% 10%;
+    --sidebar-foreground: 200 18% 96%;
+    --sidebar-border: 210 18% 22%;
+    --sidebar-primary: 188 30% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 20 10% 20%;
-    --sidebar-accent-foreground: 40 33% 98%;
-    --sidebar-ring: 135 30% 40%;
+    --sidebar-accent: 210 18% 18%;
+    --sidebar-accent-foreground: 200 18% 96%;
+    --sidebar-ring: 188 30% 50%;
 
-    --popover: 20 14% 14%;
-    --popover-foreground: 40 33% 98%;
-    --popover-border: 20 10% 25%;
+    --popover: 210 28% 12%;
+    --popover-foreground: 200 18% 96%;
+    --popover-border: 210 18% 22%;
 
-    --primary: 135 30% 40%;
+    --primary: 188 30% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 20 10% 20%;
-    --secondary-foreground: 40 33% 98%;
+    --secondary: 210 18% 18%;
+    --secondary-foreground: 200 18% 96%;
 
-    --muted: 20 10% 18%;
-    --muted-foreground: 30 10% 60%;
+    --muted: 210 18% 16%;
+    --muted-foreground: 200 12% 58%;
 
-    --accent: 25 50% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 73 42% 50%;
+    --accent-foreground: 210 30% 10%;
 
-    --destructive: 0 70% 60%;
+    --destructive: 0 65% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --input: 20 10% 30%;
-    --ring: 135 30% 40%;
+    --input: 210 18% 26%;
+    --ring: 188 30% 50%;
   }
 }
 
@@ -204,5 +205,21 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Hide Clerk development mode badge — targets all possible selectors */
+.cl-badge,
+[class*="cl-badge"],
+[class*="cl-internal-badge"],
+[class*="developmentMode"],
+[class*="cl-development"] {
+  display: none !important;
+}
+
+@layer clerk {
+  .cl-badge,
+  [class*="cl-badge"] {
+    display: none !important;
   }
 }

@@ -37,6 +37,23 @@ if (!clerkPubKey) {
   throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
 }
 
+/* SER BioSciences brand colors:
+   Teal:       #4d8f9c  (primary — buttons, active states)
+   Sage green: #72957a  (secondary — category badges)
+   Chartreuse: #aabf42  (accent — highlights)
+   Navy:       #1c2937  (foreground/text)
+*/
+const BRAND = {
+  teal:       "#4d8f9c",
+  tealDark:   "#3d7a88",
+  sage:       "#72957a",
+  chartreuse: "#aabf42",
+  navy:       "#1c2937",
+  navyMid:    "#4e6070",
+  bgLight:    "#f5f9fa",
+  border:     "#d0dde2",
+};
+
 const clerkAppearance = {
   theme: shadcn,
   cssLayerName: "clerk",
@@ -46,15 +63,15 @@ const clerkAppearance = {
     logoImageUrl: `${window.location.origin}${basePath}/logo-ser.png`,
   },
   variables: {
-    colorPrimary: "#16a34a",
-    colorForeground: "#0f172a",
-    colorMutedForeground: "#64748b",
+    colorPrimary: BRAND.teal,
+    colorForeground: BRAND.navy,
+    colorMutedForeground: BRAND.navyMid,
     colorDanger: "#dc2626",
     colorBackground: "#ffffff",
-    colorInput: "#f8fafc",
-    colorInputForeground: "#0f172a",
-    colorNeutral: "#e2e8f0",
-    fontFamily: "Inter, system-ui, sans-serif",
+    colorInput: BRAND.bgLight,
+    colorInputForeground: BRAND.navy,
+    colorNeutral: BRAND.border,
+    fontFamily: "Plus Jakarta Sans, Inter, system-ui, sans-serif",
     borderRadius: "0.5rem",
   },
   elements: {
@@ -62,27 +79,28 @@ const clerkAppearance = {
     cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg",
     card: "!shadow-none !border-0 !bg-transparent !rounded-none",
     footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    headerTitle: "text-slate-900 font-semibold",
-    headerSubtitle: "text-slate-500",
-    socialButtonsBlockButtonText: "text-slate-700 font-medium",
-    formFieldLabel: "text-slate-700 font-medium",
-    footerActionLink: "text-green-700 font-medium hover:text-green-800",
-    footerActionText: "text-slate-500",
-    dividerText: "text-slate-400",
-    identityPreviewEditButton: "text-green-700",
-    formFieldSuccessText: "text-green-700",
-    alertText: "text-slate-700",
+    headerTitle: "font-semibold",
+    headerSubtitle: "",
+    socialButtonsBlockButtonText: "font-medium",
+    formFieldLabel: "font-medium",
+    footerActionLink: "font-medium",
+    footerActionText: "",
+    dividerText: "",
+    identityPreviewEditButton: "",
+    formFieldSuccessText: "",
+    alertText: "",
     logoBox: "flex justify-center mb-2",
     logoImage: "h-16 w-auto",
-    socialButtonsBlockButton: "border border-slate-200 hover:bg-slate-50",
-    formButtonPrimary: "bg-green-700 hover:bg-green-800 text-white",
-    formFieldInput: "border-slate-200 bg-slate-50 text-slate-900",
-    footerAction: "bg-slate-50",
-    dividerLine: "bg-slate-200",
-    alert: "bg-red-50 border-red-200",
-    otpCodeFieldInput: "border-slate-200",
+    socialButtonsBlockButton: "border hover:opacity-90",
+    formButtonPrimary: "!bg-[#4d8f9c] hover:!bg-[#3d7a88] !text-white !shadow-none",
+    formFieldInput: "!bg-[#f5f9fa]",
+    footerAction: "!bg-[#f5f9fa]",
+    dividerLine: "",
+    alert: "",
+    otpCodeFieldInput: "",
     formFieldRow: "",
     main: "",
+    badge: { display: "none" },
   },
 };
 
