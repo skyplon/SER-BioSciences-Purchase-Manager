@@ -67,31 +67,48 @@ router.post("/ocr/extract", async (req, res): Promise<void> => {
 
   const { imageBase64 } = parsed.data;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-5.2",
-    max_completion_tokens: 8192,
-    messages: [
-      { role: "system", content: BASE_SYSTEM },
-      {
-        role: "user",
-        content: [
-          {
-            type: "image_url",
-            image_url: { url: `data:image/jpeg;base64,${imageBase64}`, detail: "high" },
-          },
-          { type: "text", text: "Extrae toda la información de esta factura y devuelve solo el JSON." },
-        ],
-      },
-    ],
-  });
+  const imageContent = { type: "image_url" as const, image_url: { url: `data:image/jpeg;base64,${imageBase64}`, detail: "high" as const } };
 
-  const content = response.choices[0]?.message?.content ?? "{}";
+  const [mainResponse, notesResponse] = await Promise.all([
+    openai.chat.completions.create({
+      model: "gpt-5.2",
+      max_completion_tokens: 8192,
+      messages: [
+        { role: "system", content: BASE_SYSTEM },
+        {
+          role: "user",
+          content: [imageContent, { type: "text", text: "Extrae toda la información de esta factura y devuelve solo el JSON." }],
+        },
+      ],
+    }),
+    openai.chat.completions.create({
+      model: "gpt-5.2",
+      max_completion_tokens: 4096,
+      messages: [
+        {
+          role: "system",
+          content: `Eres un extractor de datos de facturas colombianas. Tu única tarea es leer la imagen y listar con viñetas (•) TODA la información complementaria visible, sin omitir nada. Debes incluir obligatoriamente (si aparece): NIT del proveedor, dirección del proveedor, teléfono del proveedor, nombre del vendedor o asesor, forma y medio de pago, número de remisión, número de OC, lotes y vencimientos de productos, descuentos o recargos, número y fecha de la resolución DIAN, CUFE o CUDE completo, número de autorización de numeración, rango de facturas autorizado, vigencia de la autorización, firma digital (primeros 60 caracteres + "..."), fecha DIAN, régimen tributario del proveedor, y cualquier leyenda o nota impresa. Responde SOLO con el texto de las viñetas, sin JSON, sin encabezados.`,
+        },
+        {
+          role: "user",
+          content: [imageContent, { type: "text", text: "Lista toda la información complementaria de esta factura con viñetas •. No omitas nada visible." }],
+        },
+      ],
+    }),
+  ]);
+
+  const content = mainResponse.choices[0]?.message?.content ?? "{}";
   let extracted: Record<string, unknown>;
   try {
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     extracted = JSON.parse(jsonMatch ? jsonMatch[0] : content);
   } catch {
     extracted = { invoiceNumber: null, supplier: null, date: null, category: null, totalAmount: null, notes: null, items: [] };
+  }
+
+  const notesText = notesResponse.choices[0]?.message?.content?.trim() ?? null;
+  if (notesText) {
+    extracted.notes = notesText;
   }
 
   res.json(extracted);
