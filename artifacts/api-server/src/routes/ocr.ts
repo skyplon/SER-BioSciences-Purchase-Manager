@@ -21,7 +21,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin text
   "invoiceNumber": "número de factura o null",
   "supplier": "nombre del proveedor/tienda",
   "date": "fecha en formato YYYY-MM-DD o null si no está clara",
-  "category": "una de: Ferretería, Agro, Veterinaria, Combustible, Otros",
+  "category": "una de: Alimentación animal, Construcción, Consumibles del Laboratorio, Energía, Gasolina, Limpieza, Salud Animal, Transporte, Otros",
   "totalAmount": número total de la factura o null,
   "notes": "observaciones adicionales relevantes o null",
   "items": [
@@ -36,7 +36,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin text
 }
 
 Reglas importantes:
-- category: usa "Ferretería" para ferreterías y materiales de construcción, "Agro" para insumos agrícolas, abonos, semillas, fumigantes, "Veterinaria" para productos veterinarios y medicamentos animales, "Combustible" para gasolina/ACPM/diesel, "Otros" para cualquier otra cosa.
+- category: usa "Alimentación animal" para concentrados, forrajes y suplementos para animales; "Construcción" para materiales de ferretería y obra; "Consumibles del Laboratorio" para reactivos, insumos de laboratorio y análisis; "Energía" para electricidad, gas o energéticos distintos a gasolina; "Gasolina" para gasolina, ACPM o diesel; "Limpieza" para detergentes, desinfectantes y aseo; "Salud Animal" para medicamentos, vacunas y productos veterinarios; "Transporte" para fletes, servicios de carga y transporte; "Otros" para cualquier otra cosa.
 - Para los precios, extrae solo el número (sin símbolos de moneda ni puntos de miles), en punto decimal.
 - Si no puedes leer claramente un campo, usa null.
 - items debe tener todos los productos/servicios listados en la factura.`;

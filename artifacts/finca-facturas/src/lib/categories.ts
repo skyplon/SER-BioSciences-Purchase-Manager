@@ -1,9 +1,13 @@
 export const CATEGORIES: Record<string, { color: string; label: string }> = {
-  "Ferretería": { color: "#7c5c3e", label: "Ferretería" },
-  "Agro": { color: "#3b7d3b", label: "Agro" },
-  "Veterinaria": { color: "#2563a8", label: "Veterinaria" },
-  "Combustible": { color: "#c2410c", label: "Combustible" },
-  "Otros": { color: "#6b7280", label: "Otros" },
+  "Alimentación animal": { color: "#15803d", label: "Alimentación animal" },
+  "Construcción":        { color: "#92400e", label: "Construcción" },
+  "Consumibles del Laboratorio": { color: "#7c3aed", label: "Consumibles del Laboratorio" },
+  "Energía":             { color: "#d97706", label: "Energía" },
+  "Gasolina":            { color: "#dc2626", label: "Gasolina" },
+  "Limpieza":            { color: "#0891b2", label: "Limpieza" },
+  "Salud Animal":        { color: "#2563a8", label: "Salud Animal" },
+  "Transporte":          { color: "#0f766e", label: "Transporte" },
+  "Otros":               { color: "#6b7280", label: "Otros" },
 };
 
 export const CATEGORY_OPTIONS = Object.keys(CATEGORIES);
