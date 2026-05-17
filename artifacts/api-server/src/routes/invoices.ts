@@ -220,6 +220,7 @@ router.post("/invoices", async (req, res): Promise<void> => {
     await db.insert(invoiceItemsTable).values(
       items.map((item) => ({
         invoiceId: invoice.id,
+        name: item.name ?? item.description,
         description: item.description,
         quantity: item.quantity != null ? String(item.quantity) : null,
         unit: item.unit ?? null,
@@ -246,6 +247,7 @@ router.post("/invoices", async (req, res): Promise<void> => {
       createdAt: result.createdAt,
       imageUrl: result.imageBase64 ? buildInvoiceImageUrl(result.id) : null,
       items: result.items.map((item) => ({
+        name: item.name,
         description: item.description,
         quantity: item.quantity ?? null,
         unit: item.unit ?? null,

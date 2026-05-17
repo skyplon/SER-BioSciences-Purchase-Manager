@@ -10,6 +10,7 @@ function getClient(): Client {
 }
 
 export interface NotionInvoiceItem {
+  name: string;
   description: string;
   quantity: number | null;
   unit: string | null;
@@ -32,7 +33,7 @@ export interface NotionInvoice {
   items: NotionInvoiceItem[];
 }
 
-async function queryItemsByTitle(title: string): Promise<Array<{ id: string; relations: Array<{ id: string }> }>> {
+async function queryItemsByTitle(name: string): Promise<Array<{ id: string; relations: Array<{ id: string }> }>> {
   const res = await fetch(`https://api.notion.com/v1/databases/${ITEMS_DB_ID}/query`, {
     method: "POST",
     headers: {
@@ -41,7 +42,7 @@ async function queryItemsByTitle(title: string): Promise<Array<{ id: string; rel
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      filter: { property: "Artículos", title: { equals: title } },
+      filter: { property: "Artículos", title: { equals: name } },
       page_size: 1,
     }),
   });
@@ -63,7 +64,7 @@ async function syncItemToNotion(
   item: NotionInvoiceItem,
   facturaPageId: string
 ): Promise<void> {
-  const existing = await queryItemsByTitle(item.description);
+  const existing = await queryItemsByTitle(item.name);
 
   if (existing.length > 0) {
     const { id: pageId, relations: currentRelations } = existing[0];
@@ -83,7 +84,7 @@ async function syncItemToNotion(
       parent: { database_id: ITEMS_DB_ID! },
       properties: {
         "Artículos": {
-          title: [{ text: { content: item.description } }],
+          title: [{ text: { content: item.name } }],
         },
         "Proveedor": {
           relation: [{ id: facturaPageId }],

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
-import { useExtractInvoiceData, useCreateInvoice, getListInvoicesQueryKey } from "@workspace/api-client-react";
+import { useExtractInvoiceData, useValidateInvoiceData, useCreateInvoice, getListInvoicesQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,13 +16,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
+import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { BUYER_OPTIONS } from "@/lib/buyers";
 import { Link } from "wouter";
 
 interface ItemRow {
+  name: string;
   description: string;
   quantity: string;
   unit: string;
@@ -31,6 +32,7 @@ interface ItemRow {
 }
 
 const emptyItem = (): ItemRow => ({
+  name: "",
   description: "",
   quantity: "",
   unit: "",
@@ -59,7 +61,10 @@ export function InvoiceNew() {
   const [extracting, setExtracting] = useState(false);
   const [extracted, setExtracted] = useState(false);
 
+  const [validating, setValidating] = useState(false);
+
   const extractMutation = useExtractInvoiceData();
+  const validateMutation = useValidateInvoiceData();
   const createMutation = useCreateInvoice({
     mutation: {
       onSuccess: (invoice) => {
@@ -100,6 +105,7 @@ export function InvoiceNew() {
       if (data.items && data.items.length > 0) {
         setItems(
           data.items.map((item) => ({
+            name: item.name ?? "",
             description: item.description ?? "",
             quantity: item.quantity != null ? String(item.quantity) : "",
             unit: item.unit ?? "",
@@ -114,6 +120,56 @@ export function InvoiceNew() {
       toast({ title: "Error al extraer datos de la imagen", variant: "destructive" });
     } finally {
       setExtracting(false);
+    }
+  };
+
+  const handleValidate = async () => {
+    setValidating(true);
+    try {
+      const data = await validateMutation.mutateAsync({
+        data: {
+          invoiceNumber: invoiceNumber || null,
+          supplier: supplier || null,
+          date: date || null,
+          category: category || null,
+          totalAmount: totalAmount ? parseFloat(totalAmount) : null,
+          description: description || null,
+          notes: notes || null,
+          buyer: buyer || null,
+          items: items
+            .filter((i) => i.name.trim() || i.description.trim())
+            .map((i) => ({
+              name: i.name.trim() || i.description.trim(),
+              description: i.description.trim() || i.name.trim(),
+              quantity: i.quantity ? parseFloat(i.quantity) : null,
+              unit: i.unit.trim() || null,
+              unitPrice: i.unitPrice ? parseFloat(i.unitPrice) : null,
+              totalPrice: i.totalPrice ? parseFloat(i.totalPrice) : null,
+            })),
+        },
+      });
+      if (data.supplier) setSupplier(data.supplier);
+      if (data.invoiceNumber !== undefined) setInvoiceNumber(data.invoiceNumber ?? "");
+      if (data.category) setCategory(data.category);
+      if (data.description) setDescription(data.description);
+      if (data.notes) setNotes(data.notes ?? "");
+      if (data.items && data.items.length > 0) {
+        setItems(
+          data.items.map((item) => ({
+            name: item.name ?? "",
+            description: item.description ?? "",
+            quantity: item.quantity != null ? String(item.quantity) : "",
+            unit: item.unit ?? "",
+            unitPrice: item.unitPrice != null ? String(item.unitPrice) : "",
+            totalPrice: item.totalPrice != null ? String(item.totalPrice) : "",
+          }))
+        );
+      }
+      toast({ title: "Validación completada. Campos corregidos y estandarizados." });
+    } catch {
+      toast({ title: "Error al validar los datos", variant: "destructive" });
+    } finally {
+      setValidating(false);
     }
   };
 
@@ -135,7 +191,7 @@ export function InvoiceNew() {
       return;
     }
 
-    const filteredItems = items.filter((item) => item.description.trim());
+    const filteredItems = items.filter((item) => item.name.trim() || item.description.trim());
 
     createMutation.mutate({
       data: {
@@ -149,7 +205,8 @@ export function InvoiceNew() {
         notes: notes.trim() || null,
         buyer: buyer || null,
         items: filteredItems.map((item) => ({
-          description: item.description.trim(),
+          name: item.name.trim() || item.description.trim(),
+          description: item.description.trim() || item.name.trim(),
           quantity: item.quantity ? parseFloat(item.quantity) : null,
           unit: item.unit.trim() || null,
           unitPrice: item.unitPrice ? parseFloat(item.unitPrice) : null,
@@ -378,14 +435,15 @@ export function InvoiceNew() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Articulos / Servicios</CardTitle>
-          <Badge variant="outline">{items.filter((i) => i.description.trim()).length} items</Badge>
+          <Badge variant="outline">{items.filter((i) => i.name.trim() || i.description.trim()).length} items</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left pb-2 font-medium text-muted-foreground">Descripcion</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground min-w-[140px]">Nombre Artículo</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground min-w-[160px]">Descripción Completa</th>
                   <th className="text-left pb-2 font-medium text-muted-foreground w-20">Cant.</th>
                   <th className="text-left pb-2 font-medium text-muted-foreground w-20">Unidad</th>
                   <th className="text-left pb-2 font-medium text-muted-foreground w-24">P. Unit.</th>
@@ -398,9 +456,17 @@ export function InvoiceNew() {
                   <tr key={idx} data-testid={`row-item-${idx}`}>
                     <td className="pr-2 py-1">
                       <Input
+                        value={item.name}
+                        onChange={(e) => updateItem(idx, "name", e.target.value)}
+                        placeholder="Ej: Jeringa 5ml"
+                        data-testid={`input-item-name-${idx}`}
+                      />
+                    </td>
+                    <td className="pr-2 py-1">
+                      <Input
                         value={item.description}
                         onChange={(e) => updateItem(idx, "description", e.target.value)}
-                        placeholder="Descripcion del articulo"
+                        placeholder="Descripcion completa de la factura"
                         data-testid={`input-item-description-${idx}`}
                       />
                     </td>
@@ -468,6 +534,19 @@ export function InvoiceNew() {
         <Link href="/invoices">
           <Button variant="outline" data-testid="button-cancel-new">Cancelar</Button>
         </Link>
+        <Button
+          variant="outline"
+          onClick={handleValidate}
+          disabled={validating || !supplier.trim()}
+          data-testid="button-validate-invoice"
+        >
+          {validating ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <ShieldCheck className="h-4 w-4 mr-2" />
+          )}
+          Validar con IA
+        </Button>
         <Button
           onClick={handleSave}
           disabled={createMutation.isPending || !supplier.trim()}

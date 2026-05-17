@@ -12,6 +12,7 @@ export interface HealthStatus {
 export interface InvoiceItem {
   id: number;
   invoiceId: number;
+  name: string;
   description: string;
   /** @nullable */
   quantity?: number | null;
@@ -47,6 +48,7 @@ export interface Invoice {
 }
 
 export interface CreateInvoiceItemBody {
+  name: string;
   description: string;
   /** @nullable */
   quantity?: number | null;
@@ -126,6 +128,7 @@ export interface ExtractInvoiceBody {
 }
 
 export interface ExtractedInvoiceItem {
+  name: string;
   description: string;
   /** @nullable */
   quantity?: number | null;
@@ -152,6 +155,26 @@ export interface ExtractedInvoiceData {
   description?: string | null;
   /** @nullable */
   notes?: string | null;
+  items: ExtractedInvoiceItem[];
+}
+
+export interface ValidateInvoiceBody {
+  /** @nullable */
+  invoiceNumber?: string | null;
+  /** @nullable */
+  supplier?: string | null;
+  /** @nullable */
+  date?: string | null;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  totalAmount?: number | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  buyer?: string | null;
   items: ExtractedInvoiceItem[];
 }
 

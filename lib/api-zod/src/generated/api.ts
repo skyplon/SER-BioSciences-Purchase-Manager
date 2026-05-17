@@ -42,6 +42,7 @@ export const ListInvoicesResponseItem = zod.object({
     zod.object({
       id: zod.number(),
       invoiceId: zod.number(),
+      name: zod.string(),
       description: zod.string(),
       quantity: zod.number().nullish(),
       unit: zod.string().nullish(),
@@ -68,6 +69,7 @@ export const CreateInvoiceBody = zod.object({
   items: zod
     .array(
       zod.object({
+        name: zod.string(),
         description: zod.string(),
         quantity: zod.number().nullish(),
         unit: zod.string().nullish(),
@@ -116,6 +118,7 @@ export const GetInvoiceSummaryResponse = zod.object({
         zod.object({
           id: zod.number(),
           invoiceId: zod.number(),
+          name: zod.string(),
           description: zod.string(),
           quantity: zod.number().nullish(),
           unit: zod.string().nullish(),
@@ -159,6 +162,7 @@ export const GetInvoiceResponse = zod.object({
     zod.object({
       id: zod.number(),
       invoiceId: zod.number(),
+      name: zod.string(),
       description: zod.string(),
       quantity: zod.number().nullish(),
       unit: zod.string().nullish(),
@@ -187,6 +191,7 @@ export const UpdateInvoiceBody = zod.object({
   items: zod
     .array(
       zod.object({
+        name: zod.string(),
         description: zod.string(),
         quantity: zod.number().nullish(),
         unit: zod.string().nullish(),
@@ -214,6 +219,7 @@ export const UpdateInvoiceResponse = zod.object({
     zod.object({
       id: zod.number(),
       invoiceId: zod.number(),
+      name: zod.string(),
       description: zod.string(),
       quantity: zod.number().nullish(),
       unit: zod.string().nullish(),
@@ -240,6 +246,7 @@ export const ListInvoiceItemsParams = zod.object({
 export const ListInvoiceItemsResponseItem = zod.object({
   id: zod.number(),
   invoiceId: zod.number(),
+  name: zod.string(),
   description: zod.string(),
   quantity: zod.number().nullish(),
   unit: zod.string().nullish(),
@@ -265,6 +272,51 @@ export const ExtractInvoiceDataResponse = zod.object({
   notes: zod.string().nullish(),
   items: zod.array(
     zod.object({
+      name: zod.string(),
+      description: zod.string(),
+      quantity: zod.number().nullish(),
+      unit: zod.string().nullish(),
+      unitPrice: zod.number().nullish(),
+      totalPrice: zod.number().nullish(),
+    }),
+  ),
+});
+
+/**
+ * @summary Validate and normalize invoice data using AI
+ */
+export const ValidateInvoiceDataBody = zod.object({
+  invoiceNumber: zod.string().nullish(),
+  supplier: zod.string().nullish(),
+  date: zod.string().nullish(),
+  category: zod.string().nullish(),
+  totalAmount: zod.number().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  buyer: zod.string().nullish(),
+  items: zod.array(
+    zod.object({
+      name: zod.string(),
+      description: zod.string(),
+      quantity: zod.number().nullish(),
+      unit: zod.string().nullish(),
+      unitPrice: zod.number().nullish(),
+      totalPrice: zod.number().nullish(),
+    }),
+  ),
+});
+
+export const ValidateInvoiceDataResponse = zod.object({
+  invoiceNumber: zod.string().nullish(),
+  supplier: zod.string().nullish(),
+  date: zod.string().nullish(),
+  category: zod.string().nullish(),
+  totalAmount: zod.number().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  items: zod.array(
+    zod.object({
+      name: zod.string(),
       description: zod.string(),
       quantity: zod.number().nullish(),
       unit: zod.string().nullish(),

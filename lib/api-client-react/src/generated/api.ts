@@ -27,6 +27,7 @@ import type {
   InvoiceSummary,
   ListInvoicesParams,
   UpdateInvoiceBody,
+  ValidateInvoiceBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -873,4 +874,90 @@ export const useExtractInvoiceData = <
   TContext
 > => {
   return useMutation(getExtractInvoiceDataMutationOptions(options));
+};
+
+/**
+ * @summary Validate and normalize invoice data using AI
+ */
+export const getValidateInvoiceDataUrl = () => {
+  return `/api/ocr/validate`;
+};
+
+export const validateInvoiceData = async (
+  validateInvoiceBody: ValidateInvoiceBody,
+  options?: RequestInit,
+): Promise<ExtractedInvoiceData> => {
+  return customFetch<ExtractedInvoiceData>(getValidateInvoiceDataUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(validateInvoiceBody),
+  });
+};
+
+export const getValidateInvoiceDataMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof validateInvoiceData>>,
+    TError,
+    { data: BodyType<ValidateInvoiceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof validateInvoiceData>>,
+  TError,
+  { data: BodyType<ValidateInvoiceBody> },
+  TContext
+> => {
+  const mutationKey = ["validateInvoiceData"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof validateInvoiceData>>,
+    { data: BodyType<ValidateInvoiceBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return validateInvoiceData(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ValidateInvoiceDataMutationResult = NonNullable<
+  Awaited<ReturnType<typeof validateInvoiceData>>
+>;
+export type ValidateInvoiceDataMutationBody = BodyType<ValidateInvoiceBody>;
+export type ValidateInvoiceDataMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Validate and normalize invoice data using AI
+ */
+export const useValidateInvoiceData = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof validateInvoiceData>>,
+    TError,
+    { data: BodyType<ValidateInvoiceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof validateInvoiceData>>,
+  TError,
+  { data: BodyType<ValidateInvoiceBody> },
+  TContext
+> => {
+  return useMutation(getValidateInvoiceDataMutationOptions(options));
 };

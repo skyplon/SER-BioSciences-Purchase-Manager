@@ -205,6 +205,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/ExtractedInvoiceData"
 
+  /ocr/validate:
+    post:
+      operationId: validateInvoiceData
+      tags: [ocr]
+      summary: Validate and normalize invoice data using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateInvoiceBody"
+      responses:
+        "200":
+          description: Validated and corrected invoice data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractedInvoiceData"
+
 components:
   schemas:
     HealthStatus:
@@ -261,6 +280,8 @@ components:
           type: integer
         invoiceId:
           type: integer
+        name:
+          type: string
         description:
           type: string
         quantity:
@@ -274,6 +295,7 @@ components:
       required:
         - id
         - invoiceId
+        - name
         - description
 
     CreateInvoiceBody:
@@ -308,6 +330,8 @@ components:
     CreateInvoiceItemBody:
       type: object
       properties:
+        name:
+          type: string
         description:
           type: string
         quantity:
@@ -319,6 +343,7 @@ components:
         totalPrice:
           type: ["number", "null"]
       required:
+        - name
         - description
 
     UpdateInvoiceBody:
@@ -445,6 +470,8 @@ components:
     ExtractedInvoiceItem:
       type: object
       properties:
+        name:
+          type: string
         description:
           type: string
         quantity:
@@ -456,4 +483,31 @@ components:
         totalPrice:
           type: ["number", "null"]
       required:
+        - name
         - description
+
+    ValidateInvoiceBody:
+      type: object
+      properties:
+        invoiceNumber:
+          type: ["string", "null"]
+        supplier:
+          type: ["string", "null"]
+        date:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        totalAmount:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        buyer:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractedInvoiceItem"
+      required:
+        - items

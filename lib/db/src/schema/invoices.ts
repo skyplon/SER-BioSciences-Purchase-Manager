@@ -30,6 +30,7 @@ export type Invoice = typeof invoicesTable.$inferSelect;
 export const invoiceItemsTable = pgTable("invoice_items", {
   id: serial("id").primaryKey(),
   invoiceId: integer("invoice_id").notNull().references(() => invoicesTable.id, { onDelete: "cascade" }),
+  name: text("name").notNull().default(""),
   description: text("description").notNull(),
   quantity: numeric("quantity", { precision: 12, scale: 4 }),
   unit: text("unit"),

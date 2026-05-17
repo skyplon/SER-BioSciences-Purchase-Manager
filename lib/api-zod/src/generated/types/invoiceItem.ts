@@ -9,6 +9,7 @@
 export interface InvoiceItem {
   id: number;
   invoiceId: number;
+  name: string;
   description: string;
   /** @nullable */
   quantity?: number | null;

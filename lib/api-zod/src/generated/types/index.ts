@@ -20,3 +20,4 @@ export * from "./invoiceSummary";
 export * from "./listInvoicesParams";
 export * from "./supplierSummary";
 export * from "./updateInvoiceBody";
+export * from "./validateInvoiceBody";

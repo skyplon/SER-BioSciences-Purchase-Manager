@@ -7,6 +7,7 @@
  */
 
 export interface CreateInvoiceItemBody {
+  name: string;
   description: string;
   /** @nullable */
   quantity?: number | null;
