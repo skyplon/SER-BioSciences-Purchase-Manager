@@ -75,6 +75,7 @@ export function InvoiceNew() {
   const [extracted, setExtracted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const extractMutation = useExtractInvoiceData();
   const validateMutation = useValidateInvoiceData();
@@ -291,10 +292,60 @@ export function InvoiceNew() {
       return next;
     });
     setItems(updated);
-    if (filled > 0) {
-      toast({ title: `${filled} precio${filled > 1 ? "s" : ""} calculado${filled > 1 ? "s" : ""} automáticamente.` });
-    } else {
-      toast({ title: "No hay precios faltantes para completar.", variant: "default" });
+    return { updated, filled };
+  };
+
+  const handleComplete = async () => {
+    setCompleting(true);
+    try {
+      const { updated } = handleFillPrices();
+      const completedItems = updated.filter((i) => i.name.trim() || i.description.trim());
+
+      const data = await validateMutation.mutateAsync({
+        data: {
+          invoiceNumber: invoiceNumber || null,
+          supplier: supplier || null,
+          date: date || null,
+          category: category || null,
+          totalAmount: totalAmount ? parseFloat(totalAmount) : null,
+          description: description || null,
+          notes: notes || null,
+          buyer: buyer || null,
+          items: completedItems.map((i) => ({
+            name: i.name.trim() || i.description.trim(),
+            description: i.description.trim() || i.name.trim(),
+            quantity: i.quantity ? parseFloat(i.quantity) : null,
+            unit: i.unit.trim() || null,
+            unitPrice: i.unitPrice ? parseFloat(i.unitPrice) : null,
+            totalPrice: i.totalPrice ? parseFloat(i.totalPrice) : null,
+          })),
+        },
+      });
+
+      if (data.supplier) setSupplier(data.supplier);
+      if (data.invoiceNumber) setInvoiceNumber(data.invoiceNumber);
+      if (data.date) setDate(data.date);
+      if (data.category) setCategory(data.category);
+      if (data.totalAmount != null) setTotalAmount(String(data.totalAmount));
+      if (data.description) setDescription(data.description);
+      if (data.notes) setNotes(data.notes);
+      if (data.items && data.items.length > 0) {
+        setItems(
+          data.items.map((item) => ({
+            name: item.name ?? "",
+            description: item.description ?? "",
+            quantity: item.quantity != null ? String(item.quantity) : "",
+            unit: item.unit ?? "",
+            unitPrice: item.unitPrice != null ? String(item.unitPrice) : "",
+            totalPrice: item.totalPrice != null ? String(item.totalPrice) : "",
+          }))
+        );
+      }
+      toast({ title: "Campos completados y corregidos con IA." });
+    } catch {
+      toast({ title: "Error al completar los datos con IA", variant: "destructive" });
+    } finally {
+      setCompleting(false);
     }
   };
 
@@ -631,10 +682,10 @@ export function InvoiceNew() {
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Observaciones adicionales"
-              rows={2}
+              placeholder="Observaciones adicionales, información adicional de la factura, condiciones de pago, etc."
+              rows={4}
               data-testid="input-notes"
-              className={cn(showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
+              className={cn("resize-y", showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
             />
             {showErrors && !notes.trim() && <p className="text-xs text-red-500">Campo requerido</p>}
           </div>
@@ -643,21 +694,9 @@ export function InvoiceNew() {
 
       {/* Items */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Articulos / Servicios</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleFillPrices}
-              data-testid="button-fill-prices"
-              title="Calcula P. Unit. = Total ÷ Cant. para ítems con precio unitario vacío"
-            >
-              <Wand2 className="h-3.5 w-3.5 mr-1.5" />
-              Completar precios
-            </Button>
-            <Badge variant="outline">{items.filter((i) => i.name.trim() || i.description.trim()).length} items</Badge>
-          </div>
+          <Badge variant="outline">{items.filter((i) => i.name.trim() || i.description.trim()).length} items</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="overflow-x-auto">
@@ -762,10 +801,23 @@ export function InvoiceNew() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center gap-3 justify-end">
+      <div className="flex items-center gap-3 justify-end flex-wrap">
         <Link href="/invoices">
           <Button variant="outline" data-testid="button-cancel-new">Cancelar</Button>
         </Link>
+        <Button
+          variant="outline"
+          onClick={handleComplete}
+          disabled={completing || !supplier.trim()}
+          data-testid="button-complete-invoice"
+        >
+          {completing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Wand2 className="h-4 w-4 mr-2" />
+          )}
+          Completar con IA
+        </Button>
         <Button
           variant="outline"
           onClick={handleValidate}
