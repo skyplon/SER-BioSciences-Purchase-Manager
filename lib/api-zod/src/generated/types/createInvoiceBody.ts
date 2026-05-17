@@ -20,5 +20,7 @@ export interface CreateInvoiceBody {
   imageBase64?: string | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  buyer?: string | null;
   items?: CreateInvoiceItemBody[];
 }

@@ -21,6 +21,8 @@ export interface Invoice {
   imageBase64?: string | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  buyer?: string | null;
   createdAt: string;
   updatedAt: string;
   items: InvoiceItem[];

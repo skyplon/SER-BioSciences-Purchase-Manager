@@ -25,6 +25,7 @@ export interface NotionInvoice {
   category: string;
   totalAmount: number | null;
   notes: string | null;
+  buyer: string | null;
   createdAt: Date;
   imageUrl: string | null;
   items: NotionInvoiceItem[];
@@ -61,6 +62,9 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
       "Fecha de registro": {
         date: { start: invoice.createdAt.toISOString().split("T")[0] },
       },
+      ...(invoice.buyer
+        ? { "Comprador": { select: { name: invoice.buyer } } }
+        : {}),
       ...(invoice.imageUrl
         ? {
             "Foto del Recibo": {

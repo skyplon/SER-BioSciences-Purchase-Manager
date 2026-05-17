@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
+import { BUYER_OPTIONS } from "@/lib/buyers";
 import { Link } from "wouter";
 
 interface ItemRow {
@@ -50,6 +51,7 @@ export function InvoiceNew() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [date, setDate] = useState("");
   const [category, setCategory] = useState("Otros");
+  const [buyer, setBuyer] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<ItemRow[]>([emptyItem()]);
@@ -142,6 +144,7 @@ export function InvoiceNew() {
         totalAmount: totalAmount ? parseFloat(totalAmount) : null,
         imageBase64: imageBase64 || null,
         notes: notes.trim() || null,
+        buyer: buyer || null,
         items: filteredItems.map((item) => ({
           description: item.description.trim(),
           quantity: item.quantity ? parseFloat(item.quantity) : null,
@@ -307,6 +310,19 @@ export function InvoiceNew() {
                 <SelectContent>
                   {CATEGORY_OPTIONS.map((cat) => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="buyer">Comprador</Label>
+              <Select value={buyer} onValueChange={setBuyer}>
+                <SelectTrigger id="buyer" data-testid="select-buyer">
+                  <SelectValue placeholder="Seleccionar..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {BUYER_OPTIONS.map((b) => (
+                    <SelectItem key={b} value={b}>{b}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

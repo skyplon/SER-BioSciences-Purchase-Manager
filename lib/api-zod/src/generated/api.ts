@@ -34,6 +34,7 @@ export const ListInvoicesResponseItem = zod.object({
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
   notes: zod.string().nullish(),
+  buyer: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
   items: zod.array(
@@ -61,6 +62,7 @@ export const CreateInvoiceBody = zod.object({
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
   notes: zod.string().nullish(),
+  buyer: zod.string().nullish(),
   items: zod
     .array(
       zod.object({
@@ -104,6 +106,7 @@ export const GetInvoiceSummaryResponse = zod.object({
       totalAmount: zod.number().nullish(),
       imageBase64: zod.string().nullish(),
       notes: zod.string().nullish(),
+      buyer: zod.string().nullish(),
       createdAt: zod.string(),
       updatedAt: zod.string(),
       items: zod.array(
@@ -145,6 +148,7 @@ export const GetInvoiceResponse = zod.object({
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
   notes: zod.string().nullish(),
+  buyer: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
   items: zod.array(
@@ -174,6 +178,7 @@ export const UpdateInvoiceBody = zod.object({
   category: zod.string().optional(),
   totalAmount: zod.number().nullish(),
   notes: zod.string().nullish(),
+  buyer: zod.string().nullish(),
   items: zod
     .array(
       zod.object({
@@ -196,6 +201,7 @@ export const UpdateInvoiceResponse = zod.object({
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
   notes: zod.string().nullish(),
+  buyer: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
   items: zod.array(

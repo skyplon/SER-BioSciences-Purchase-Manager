@@ -12,6 +12,7 @@ export const invoicesTable = pgTable("invoices", {
   imageBase64: text("image_base64"),
   imageObjectPath: text("image_object_path"),
   notes: text("notes"),
+  buyer: text("buyer"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

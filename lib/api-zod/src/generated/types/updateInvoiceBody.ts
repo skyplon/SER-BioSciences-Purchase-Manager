@@ -18,5 +18,7 @@ export interface UpdateInvoiceBody {
   totalAmount?: number | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  buyer?: string | null;
   items?: CreateInvoiceItemBody[];
 }

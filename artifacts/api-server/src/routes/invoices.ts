@@ -145,6 +145,7 @@ router.get("/invoices/export", async (_req, res): Promise<void> => {
     { header: "Categoria", key: "category", width: 20 },
     { header: "Total", key: "totalAmount", width: 15 },
     { header: "Notas", key: "notes", width: 40 },
+    { header: "Comprador", key: "buyer", width: 20 },
     { header: "Fecha Registro", key: "createdAt", width: 20 },
   ];
 
@@ -159,6 +160,7 @@ router.get("/invoices/export", async (_req, res): Promise<void> => {
       category: inv.category,
       totalAmount: inv.totalAmount ? parseFloat(inv.totalAmount) : "",
       notes: inv.notes ?? "",
+      buyer: inv.buyer ?? "",
       createdAt: inv.createdAt.toISOString().split("T")[0],
     });
   }
@@ -237,6 +239,7 @@ router.post("/invoices", async (req, res): Promise<void> => {
       category: result.category,
       totalAmount: result.totalAmount ?? null,
       notes: result.notes ?? null,
+      buyer: result.buyer ?? null,
       createdAt: result.createdAt,
       imageUrl: result.imageBase64 ? buildInvoiceImageUrl(result.id) : null,
       items: result.items.map((item) => ({
@@ -310,6 +313,7 @@ router.patch("/invoices/:id", async (req, res): Promise<void> => {
   if (invoiceData.category !== undefined) updateData.category = invoiceData.category;
   if (invoiceData.totalAmount !== undefined) updateData.totalAmount = invoiceData.totalAmount != null ? String(invoiceData.totalAmount) : null;
   if (invoiceData.notes !== undefined) updateData.notes = invoiceData.notes;
+  if (invoiceData.buyer !== undefined) updateData.buyer = invoiceData.buyer;
 
   if (Object.keys(updateData).length > 0) {
     const [updated] = await db
