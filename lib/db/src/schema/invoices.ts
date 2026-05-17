@@ -10,6 +10,7 @@ export const invoicesTable = pgTable("invoices", {
   category: text("category").notNull().default("Otros"),
   totalAmount: numeric("total_amount", { precision: 12, scale: 2 }),
   imageBase64: text("image_base64"),
+  imageObjectPath: text("image_object_path"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

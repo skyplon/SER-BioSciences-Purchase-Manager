@@ -26,6 +26,7 @@ export interface NotionInvoice {
   totalAmount: number | null;
   notes: string | null;
   createdAt: Date;
+  imageUrl: string | null;
   items: NotionInvoiceItem[];
 }
 
@@ -36,7 +37,7 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
 
   const notion = getClient();
 
-  const facturaPage = await notion.pages.create({
+  const pagePayload: Parameters<typeof notion.pages.create>[0] = {
     parent: { database_id: FACTURAS_DB_ID },
     properties: {
       "Proveedor": {
@@ -61,7 +62,26 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
         date: { start: invoice.createdAt.toISOString().split("T")[0] },
       },
     },
-  });
+  };
+
+  if (invoice.imageUrl) {
+    (pagePayload as Record<string, unknown>).cover = {
+      type: "external",
+      external: { url: invoice.imageUrl },
+    };
+    (pagePayload as Record<string, unknown>).children = [
+      {
+        object: "block",
+        type: "image",
+        image: {
+          type: "external",
+          external: { url: invoice.imageUrl },
+        },
+      },
+    ];
+  }
+
+  const facturaPage = await notion.pages.create(pagePayload);
 
   if (invoice.items.length > 0) {
     await Promise.all(

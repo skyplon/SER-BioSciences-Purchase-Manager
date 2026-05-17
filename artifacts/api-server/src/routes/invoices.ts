@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 import ExcelJS from "exceljs";
 import { syncInvoiceToNotion } from "../lib/notion.js";
+import { buildInvoiceImageUrl } from "../lib/imageUpload.js";
 
 const router: IRouter = Router();
 
@@ -237,6 +238,7 @@ router.post("/invoices", async (req, res): Promise<void> => {
       totalAmount: result.totalAmount ?? null,
       notes: result.notes ?? null,
       createdAt: result.createdAt,
+      imageUrl: result.imageBase64 ? buildInvoiceImageUrl(result.id) : null,
       items: result.items.map((item) => ({
         description: item.description,
         quantity: item.quantity ?? null,
@@ -248,6 +250,26 @@ router.post("/invoices", async (req, res): Promise<void> => {
       console.error("Error sincronizando con Notion:", err?.message ?? err);
     });
   }
+});
+
+router.get("/invoices/:id/image", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) { res.status(400).end(); return; }
+
+  const rows = await db.select({ imageBase64: invoicesTable.imageBase64 })
+    .from(invoicesTable).where(eq(invoicesTable.id, id)).limit(1);
+
+  const imageBase64 = rows[0]?.imageBase64;
+  if (!imageBase64) { res.status(404).end(); return; }
+
+  const dataMatch = imageBase64.match(/^data:([^;]+);base64,(.+)$/);
+  const contentType = dataMatch ? dataMatch[1] : "image/jpeg";
+  const rawBase64 = dataMatch ? dataMatch[2] : imageBase64;
+  const buffer = Buffer.from(rawBase64, "base64");
+
+  res.setHeader("Content-Type", contentType);
+  res.setHeader("Cache-Control", "public, max-age=31536000");
+  res.send(buffer);
 });
 
 router.get("/invoices/:id", async (req, res): Promise<void> => {
