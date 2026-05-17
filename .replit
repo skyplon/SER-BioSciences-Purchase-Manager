@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "postgresql-16"]
 
 [deployment]
 router = "application"
@@ -44,3 +44,6 @@ externalPort = 3001
 [userenv.shared]
 NOTION_FACTURAS_DB_ID = "1a6a2e91-1794-436f-833c-49d9ece6b5f3"
 NOTION_ITEMS_DB_ID = "36d14d9b-58b1-4c18-b4ea-236457f1a1ca"
+
+[nix]
+channel = "stable-25_05"
