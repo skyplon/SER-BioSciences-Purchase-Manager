@@ -138,12 +138,12 @@ router.get("/invoices/export", async (_req, res): Promise<void> => {
 
   const invoiceSheet = workbook.addWorksheet("Facturas");
   invoiceSheet.columns = [
-    { header: "ID", key: "id", width: 8 },
+    { header: "ID Factura", key: "id", width: 12 },
     { header: "Numero Factura", key: "invoiceNumber", width: 20 },
     { header: "Proveedor", key: "supplier", width: 25 },
-    { header: "Fecha", key: "date", width: 15 },
+    { header: "Fecha Compra", key: "date", width: 15 },
     { header: "Categoria", key: "category", width: 20 },
-    { header: "Total", key: "totalAmount", width: 15 },
+    { header: "Costo Total", key: "totalAmount", width: 15 },
     { header: "Descripcion", key: "description", width: 60 },
     { header: "Notas", key: "notes", width: 40 },
     { header: "Comprador", key: "buyer", width: 20 },
@@ -167,10 +167,13 @@ router.get("/invoices/export", async (_req, res): Promise<void> => {
     });
   }
 
+  const supplierMap = new Map(invoices.map((inv) => [inv.id, inv.supplier]));
+
   const itemsSheet = workbook.addWorksheet("Items");
   itemsSheet.columns = [
-    { header: "ID", key: "id", width: 8 },
-    { header: "Factura ID", key: "invoiceId", width: 12 },
+    { header: "ID Item", key: "id", width: 10 },
+    { header: "ID Factura", key: "invoiceId", width: 12 },
+    { header: "Proveedor", key: "supplier", width: 25 },
     { header: "Descripcion", key: "description", width: 40 },
     { header: "Cantidad", key: "quantity", width: 12 },
     { header: "Unidad", key: "unit", width: 12 },
@@ -184,6 +187,7 @@ router.get("/invoices/export", async (_req, res): Promise<void> => {
     itemsSheet.addRow({
       id: item.id,
       invoiceId: item.invoiceId,
+      supplier: supplierMap.get(item.invoiceId ?? 0) ?? "",
       description: item.description,
       quantity: item.quantity ? parseFloat(item.quantity) : "",
       unit: item.unit ?? "",
