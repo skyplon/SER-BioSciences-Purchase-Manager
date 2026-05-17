@@ -43,7 +43,7 @@ const clerkAppearance = {
   options: {
     logoPlacement: "inside" as const,
     logoLinkUrl: basePath || "/",
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    logoImageUrl: `${window.location.origin}${basePath}/logo-ser.png`,
   },
   variables: {
     colorPrimary: "#16a34a",
@@ -72,8 +72,8 @@ const clerkAppearance = {
     identityPreviewEditButton: "text-green-700",
     formFieldSuccessText: "text-green-700",
     alertText: "text-slate-700",
-    logoBox: "flex justify-center mb-1",
-    logoImage: "h-10 w-auto",
+    logoBox: "flex justify-center mb-2",
+    logoImage: "h-16 w-auto",
     socialButtonsBlockButton: "border border-slate-200 hover:bg-slate-50",
     formButtonPrimary: "bg-green-700 hover:bg-green-800 text-white",
     formFieldInput: "border-slate-200 bg-slate-50 text-slate-900",
@@ -175,14 +175,14 @@ function ClerkProviderWithRoutes() {
       localization={{
         signIn: {
           start: {
-            title: "Finca Facturas",
-            subtitle: "Inicia sesión para gestionar las compras",
+            title: "SER BioSciences",
+            subtitle: "In Search for Sunrise",
           },
         },
         signUp: {
           start: {
-            title: "Crear cuenta",
-            subtitle: "Únete al sistema de gestión de facturas",
+            title: "SER BioSciences",
+            subtitle: "In Search for Sunrise",
           },
         },
       }}
