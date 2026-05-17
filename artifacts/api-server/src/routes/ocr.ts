@@ -23,7 +23,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin text
   "category": "una de: Alimentación animal, Construcción, Consumibles del Laboratorio, Energía, Gasolina, Limpieza, Salud Animal, Transporte, Otros",
   "totalAmount": número total de la factura o null,
   "description": "descripción corta (máximo 2 oraciones) explicando la naturaleza de la compra: qué tipo de proveedor es, qué tipo de artículos se compraron y para qué sirven en el contexto de una finca.",
-  "notes": "Observaciones estructuradas y detalladas. Extrae y organiza con viñetas '•' TODA la información complementaria disponible en la factura, incluyendo: condiciones de pago (contado/crédito/plazo en días), nombre del vendedor o asesor comercial, número de orden de compra u OC, número de remisión o guía de despacho, descuentos aplicados o recargos especiales, datos de contacto del proveedor (teléfono/email/dirección si aparecen), número de resolución DIAN o CUFE/CUDE, lotes o seriales de productos, observaciones o leyendas impresas en la factura, condiciones de entrega, garantías, y cualquier dato adicional relevante para trazabilidad y control de compras en la finca. Sé completo y detallado. Usa null SOLO si la factura no tiene absolutamente ninguna información adicional.",
+  "notes": "Observaciones estructuradas y detalladas. Extrae y organiza con viñetas '•' TODA la información complementaria visible en la factura. SIEMPRE incluye si están presentes: • Forma y medio de pago • Nombre del vendedor o asesor comercial • NIT/CC del proveedor • Dirección y teléfono del proveedor • Número de remisión o guía de despacho • Número de OC • Lotes y fechas de vencimiento de productos • Descuentos aplicados o recargos • Resolución DIAN (número y fecha) • CUFE o CUDE completo • Autorización de numeración (número, rango de facturas, vigencia) • Firma digital (primeros 40 caracteres seguido de '...') • Fecha DIAN • Régimen tributario del proveedor (IVA, RTE ICA, grandes contribuyentes, etc.) • Leyendas o notas impresas en la factura • Condiciones de entrega o garantías. Sé exhaustivo — esta es la única fuente de trazabilidad del documento. Usa null SOLO si la factura no contiene absolutamente ninguna información adicional.",
   "items": [
     ${ITEM_JSON}
   ]
@@ -48,7 +48,7 @@ router.post("/ocr/extract", async (req, res): Promise<void> => {
 
   const response = await openai.chat.completions.create({
     model: "gpt-5.2",
-    max_completion_tokens: 4096,
+    max_completion_tokens: 8192,
     messages: [
       { role: "system", content: BASE_SYSTEM },
       {
@@ -115,7 +115,7 @@ ${JSON.stringify(data, null, 2)}`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-5.2",
-    max_completion_tokens: 4096,
+    max_completion_tokens: 8192,
     messages: [{ role: "user", content: validatePrompt }],
   });
 
