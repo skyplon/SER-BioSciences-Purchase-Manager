@@ -31,8 +31,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Download, Trash2, Eye, Search, X } from "lucide-react";
+import { PlusCircle, Download, Trash2, Eye, Search, X, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+type SortField = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount";
+type SortDir = "asc" | "desc";
+
+function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: SortField | null; sortDir: SortDir }) {
+  if (sortField !== field) return <ChevronsUpDown className="h-3.5 w-3.5 ml-1 inline opacity-40" />;
+  return sortDir === "asc"
+    ? <ChevronUp className="h-3.5 w-3.5 ml-1 inline text-primary" />
+    : <ChevronDown className="h-3.5 w-3.5 ml-1 inline text-primary" />;
+}
 
 export function InvoicesList() {
   const queryClient = useQueryClient();
@@ -42,6 +52,17 @@ export function InvoicesList() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [sortField, setSortField] = useState<SortField | null>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
 
   const params: Record<string, string> = {};
   if (category && category !== "all") params.category = category;
@@ -95,6 +116,32 @@ export function InvoicesList() {
   };
 
   const hasFilters = category || searchSupplier || startDate || endDate;
+
+  const sortedInvoices = [...(invoices ?? [])].sort((a, b) => {
+    if (!sortField) return 0;
+    let valA: string | number | null = null;
+    let valB: string | number | null = null;
+    if (sortField === "date") {
+      valA = a.date ?? "";
+      valB = b.date ?? "";
+    } else if (sortField === "supplier") {
+      valA = a.supplier.toLowerCase();
+      valB = b.supplier.toLowerCase();
+    } else if (sortField === "invoiceNumber") {
+      valA = a.invoiceNumber ?? "";
+      valB = b.invoiceNumber ?? "";
+    } else if (sortField === "category") {
+      valA = a.category.toLowerCase();
+      valB = b.category.toLowerCase();
+    } else if (sortField === "totalAmount") {
+      valA = a.totalAmount ?? 0;
+      valB = b.totalAmount ?? 0;
+    }
+    if (valA === null || valB === null) return 0;
+    if (valA < valB) return sortDir === "asc" ? -1 : 1;
+    if (valA > valB) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="space-y-6">
@@ -190,16 +237,32 @@ export function InvoicesList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Fecha</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Proveedor</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">No. Factura</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Categoria</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Total</th>
+                  {(["date", "supplier", "invoiceNumber", "category", "totalAmount"] as SortField[]).map((field, i) => {
+                    const labels: Record<SortField, string> = {
+                      date: "Fecha",
+                      supplier: "Proveedor",
+                      invoiceNumber: "No. Factura",
+                      category: "Categoría",
+                      totalAmount: "Total",
+                    };
+                    const isRight = field === "totalAmount";
+                    return (
+                      <th
+                        key={field}
+                        className={`px-4 py-3 font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors whitespace-nowrap ${isRight ? "text-right" : "text-left"}`}
+                        onClick={() => handleSort(field)}
+                        data-testid={`th-sort-${field}`}
+                      >
+                        {labels[field]}
+                        <SortIcon field={field} sortField={sortField} sortDir={sortDir} />
+                      </th>
+                    );
+                  })}
                   <th className="text-center px-4 py-3 font-medium text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {invoices.map((inv) => (
+                {sortedInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-muted/30 transition-colors" data-testid={`row-invoice-${inv.id}`}>
                     <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.date)}</td>
                     <td className="px-4 py-3 font-medium text-foreground">{inv.supplier}</td>
