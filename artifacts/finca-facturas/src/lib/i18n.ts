@@ -62,7 +62,7 @@ const translations = {
     "invoices.deleteSuccess": "Factura eliminada",
 
     "invoiceNew.title": "Nueva Factura",
-    "invoiceNew.subtitle": "Captura o carga una foto de la factura",
+    "invoiceNew.subtitle": "Captura o carga un archivo de la factura",
     "invoiceNew.fileSection": "Factura (Imagen, PDF o Word)",
     "invoiceNew.image": "Imagen de la Factura",
     "invoiceNew.takePhoto": "Tomar Foto",
