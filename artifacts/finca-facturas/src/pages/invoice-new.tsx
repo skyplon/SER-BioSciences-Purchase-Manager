@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck, FileText, FileType } from "lucide-react";
+import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck, FileText, FileType, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { BUYER_OPTIONS } from "@/lib/buyers";
@@ -271,6 +271,31 @@ export function InvoiceNew() {
 
   const removeItem = (idx: number) => {
     setItems(items.filter((_, i) => i !== idx));
+  };
+
+  const handleFillPrices = () => {
+    let filled = 0;
+    const updated = items.map((item) => {
+      const qty = parseFloat(item.quantity);
+      const unit = parseFloat(item.unitPrice);
+      const total = parseFloat(item.totalPrice);
+      let next = { ...item };
+
+      if ((!item.unitPrice || unit === 0) && total > 0 && qty > 0) {
+        next.unitPrice = String(Math.round(total / qty));
+        filled++;
+      } else if ((!item.totalPrice || total === 0) && unit > 0 && qty > 0) {
+        next.totalPrice = String(Math.round(unit * qty));
+        filled++;
+      }
+      return next;
+    });
+    setItems(updated);
+    if (filled > 0) {
+      toast({ title: `${filled} precio${filled > 1 ? "s" : ""} calculado${filled > 1 ? "s" : ""} automáticamente.` });
+    } else {
+      toast({ title: "No hay precios faltantes para completar.", variant: "default" });
+    }
   };
 
   const isItemValid = (item: ItemRow) =>
@@ -618,9 +643,21 @@ export function InvoiceNew() {
 
       {/* Items */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
           <CardTitle className="text-base">Articulos / Servicios</CardTitle>
-          <Badge variant="outline">{items.filter((i) => i.name.trim() || i.description.trim()).length} items</Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleFillPrices}
+              data-testid="button-fill-prices"
+              title="Calcula P. Unit. = Total ÷ Cant. para ítems con precio unitario vacío"
+            >
+              <Wand2 className="h-3.5 w-3.5 mr-1.5" />
+              Completar precios
+            </Button>
+            <Badge variant="outline">{items.filter((i) => i.name.trim() || i.description.trim()).length} items</Badge>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="overflow-x-auto">
