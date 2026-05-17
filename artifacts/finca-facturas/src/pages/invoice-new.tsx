@@ -661,7 +661,7 @@ export function InvoiceNew() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t("invoiceNew.notesPlaceholder")}
-              rows={4}
+              rows={3}
               data-testid="input-notes"
               className={cn("resize-y", showErrors && !notes.trim() && "border-red-500 focus-visible:ring-red-500")}
             />
