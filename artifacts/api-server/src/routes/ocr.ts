@@ -130,4 +130,35 @@ ${JSON.stringify(data, null, 2)}`;
   res.json(validated);
 });
 
+router.post("/ocr/extract-text", async (req, res): Promise<void> => {
+  const { text } = req.body as { text?: unknown };
+  if (!text || typeof text !== "string") {
+    res.status(400).json({ error: "text field is required" });
+    return;
+  }
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-5.2",
+    max_completion_tokens: 4096,
+    messages: [
+      { role: "system", content: BASE_SYSTEM },
+      {
+        role: "user",
+        content: `Extrae toda la información de esta factura y devuelve solo el JSON.\n\nTexto de la factura:\n${text}`,
+      },
+    ],
+  });
+
+  const content = response.choices[0]?.message?.content ?? "{}";
+  let extracted: Record<string, unknown>;
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    extracted = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+  } catch {
+    extracted = { invoiceNumber: null, supplier: null, date: null, category: null, totalAmount: null, notes: null, items: [] };
+  }
+
+  res.json(extracted);
+});
+
 export default router;

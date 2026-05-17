@@ -11,7 +11,9 @@ import { Dashboard } from "@/pages/dashboard";
 import { InvoicesList } from "@/pages/invoices-list";
 import { InvoiceNew } from "@/pages/invoice-new";
 import { InvoiceDetail } from "@/pages/invoice-detail";
+import { SettingsPage } from "@/pages/settings";
 import NotFound from "@/pages/not-found";
+import { SettingsProvider } from "@/contexts/settings-context";
 
 const queryClient = new QueryClient();
 
@@ -136,6 +138,7 @@ function AuthGuard() {
             <Route path="/invoices" component={InvoicesList} />
             <Route path="/invoices/new" component={InvoiceNew} />
             <Route path="/invoices/:id" component={InvoiceDetail} />
+            <Route path="/settings" component={SettingsPage} />
             <Route component={NotFound} />
           </Switch>
         </Layout>
@@ -191,9 +194,11 @@ function ClerkProviderWithRoutes() {
 
 function App() {
   return (
-    <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
-    </WouterRouter>
+    <SettingsProvider>
+      <WouterRouter base={basePath}>
+        <ClerkProviderWithRoutes />
+      </WouterRouter>
+    </SettingsProvider>
   );
 }
 

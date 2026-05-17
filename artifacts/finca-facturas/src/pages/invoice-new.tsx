@@ -2,6 +2,9 @@ import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useExtractInvoiceData, useValidateInvoiceData, useCreateInvoice, getListInvoicesQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/react";
+import * as pdfjsLib from "pdfjs-dist";
+import mammoth from "mammoth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,11 +20,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck } from "lucide-react";
+import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck, FileText, FileType } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { BUYER_OPTIONS } from "@/lib/buyers";
 import { Link } from "wouter";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).href;
 
 interface ItemRow {
   name: string;
@@ -45,8 +53,11 @@ export function InvoiceNew() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { getToken } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const docxInputRef = useRef<HTMLInputElement>(null);
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -59,6 +70,7 @@ export function InvoiceNew() {
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<ItemRow[]>([emptyItem()]);
+  const [docxName, setDocxName] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [extracted, setExtracted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
@@ -84,11 +96,86 @@ export function InvoiceNew() {
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
       setImagePreview(dataUrl);
+      setDocxName(null);
       const base64 = dataUrl.split(",")[1];
       setImageBase64(base64);
       handleExtract(base64);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handlePdfFile = async (file: File) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d")!;
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      const base64 = dataUrl.split(",")[1];
+      setImagePreview(dataUrl);
+      setImageBase64(base64);
+      setDocxName(null);
+      handleExtract(base64);
+    } catch {
+      toast({ title: "Error al procesar el PDF", variant: "destructive" });
+    }
+  };
+
+  const handleDocxFile = async (file: File) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      const text = result.value.trim();
+      if (!text) {
+        toast({ title: "No se pudo extraer texto del documento Word", variant: "destructive" });
+        return;
+      }
+      setDocxName(file.name);
+      setImagePreview(null);
+      setImageBase64(null);
+      setExtracting(true);
+      setExtracted(false);
+      const token = await getToken();
+      const response = await fetch("/api/ocr/extract-text", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ text }),
+      });
+      if (!response.ok) throw new Error("API error");
+      const data = await response.json() as Record<string, unknown>;
+      if (data.supplier) setSupplier(data.supplier as string);
+      if (data.invoiceNumber) setInvoiceNumber(data.invoiceNumber as string);
+      if (data.date) setDate(data.date as string);
+      if (data.category) setCategory(data.category as string);
+      if (data.totalAmount != null) setTotalAmount(String(data.totalAmount));
+      if (data.description) setDescription(data.description as string);
+      if (data.notes) setNotes(data.notes as string);
+      const rawItems = data.items as Array<Record<string, unknown>> | undefined;
+      if (rawItems && rawItems.length > 0) {
+        setItems(rawItems.map((item) => ({
+          name: String(item.name ?? ""),
+          description: String(item.description ?? ""),
+          quantity: item.quantity != null ? String(item.quantity) : "",
+          unit: String(item.unit ?? ""),
+          unitPrice: item.unitPrice != null ? String(item.unitPrice) : "",
+          totalPrice: item.totalPrice != null ? String(item.totalPrice) : "",
+        })));
+      }
+      setExtracted(true);
+      toast({ title: "Datos extraídos del documento Word. Revisa y corrige si es necesario." });
+    } catch {
+      toast({ title: "Error al procesar el documento Word", variant: "destructive" });
+    } finally {
+      setExtracting(false);
+    }
   };
 
   const handleExtract = async (base64: string) => {
@@ -253,7 +340,7 @@ export function InvoiceNew() {
       {/* Image capture */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Imagen de la Factura</CardTitle>
+          <CardTitle className="text-base">Factura (Imagen, PDF o Word)</CardTitle>
         </CardHeader>
         <CardContent>
           {imagePreview ? (
@@ -277,41 +364,80 @@ export function InvoiceNew() {
               {extracted && (
                 <div className="flex items-center gap-2 text-sm text-green-600">
                   <CheckCircle className="h-4 w-4" />
-                  Datos extraidos automaticamente. Revisa y corrige si es necesario.
+                  Datos extraídos automáticamente. Revisa y corrige si es necesario.
                 </div>
               )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  setImageBase64(null);
-                  setImagePreview(null);
-                  setExtracted(false);
-                }}
+                onClick={() => { setImageBase64(null); setImagePreview(null); setExtracted(false); }}
                 data-testid="button-remove-image"
               >
-                Cambiar imagen
+                Cambiar archivo
+              </Button>
+            </div>
+          ) : docxName ? (
+            <div className="space-y-3">
+              <div className={cn("flex items-center gap-3 p-4 rounded border border-border bg-muted/40", extracting && "opacity-60")}>
+                <FileType className="h-8 w-8 text-blue-500 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{docxName}</p>
+                  <p className="text-xs text-muted-foreground">Documento Word</p>
+                </div>
+                {extracting && <Loader2 className="h-4 w-4 animate-spin text-primary ml-auto" />}
+              </div>
+              {extracted && (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <CheckCircle className="h-4 w-4" />
+                  Datos extraídos automáticamente. Revisa y corrige si es necesario.
+                </div>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setDocxName(null); setExtracted(false); }}
+                data-testid="button-remove-image"
+              >
+                Cambiar archivo
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <Button
                 variant="outline"
-                className="flex-1 h-24 flex-col gap-2"
+                className="h-24 flex-col gap-2"
                 onClick={() => cameraInputRef.current?.click()}
                 data-testid="button-camera-capture"
               >
                 <Camera className="h-6 w-6" />
-                <span>Tomar Foto</span>
+                <span className="text-xs">Tomar Foto</span>
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 h-24 flex-col gap-2"
+                className="h-24 flex-col gap-2"
                 onClick={() => fileInputRef.current?.click()}
                 data-testid="button-upload-image"
               >
                 <Upload className="h-6 w-6" />
-                <span>Cargar Imagen</span>
+                <span className="text-xs">Cargar Imagen</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-24 flex-col gap-2"
+                onClick={() => pdfInputRef.current?.click()}
+                data-testid="button-upload-pdf"
+              >
+                <FileText className="h-6 w-6 text-red-500" />
+                <span className="text-xs">Cargar PDF</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-24 flex-col gap-2"
+                onClick={() => docxInputRef.current?.click()}
+                data-testid="button-upload-word"
+              >
+                <FileType className="h-6 w-6 text-blue-500" />
+                <span className="text-xs">Cargar Word</span>
               </Button>
             </div>
           )}
@@ -337,6 +463,28 @@ export function InvoiceNew() {
               if (file) handleImageFile(file);
             }}
             data-testid="input-file-upload"
+          />
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handlePdfFile(file);
+            }}
+            data-testid="input-pdf-upload"
+          />
+          <input
+            ref={docxInputRef}
+            type="file"
+            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleDocxFile(file);
+            }}
+            data-testid="input-docx-upload"
           />
         </CardContent>
       </Card>
