@@ -59,9 +59,6 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
       "Notas": {
         rich_text: [{ text: { content: invoice.notes ?? "" } }],
       },
-      "Fecha de Creación": {
-        date: { start: invoice.createdAt.toISOString().split("T")[0] },
-      },
       ...(invoice.buyer
         ? { "Comprador": { select: { name: invoice.buyer } } }
         : {}),
@@ -106,7 +103,7 @@ export async function syncInvoiceToNotion(invoice: NotionInvoice): Promise<void>
         notion.pages.create({
           parent: { database_id: ITEMS_DB_ID! },
           properties: {
-            "Descripción": {
+            "Artículos": {
               title: [{ text: { content: item.description } }],
             },
             "Proveedor": {
