@@ -1,4 +1,4 @@
-# Gestor de Facturas Finca — SER BioSciences
+# SER BioSciences - Farm Purchase Manager
 
 Web app for SER BioSciences (Colombian citrus & cattle farm) to digitize physical invoices from hardware stores and agricultural suppliers using AI-powered OCR.
 
