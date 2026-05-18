@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, PlusCircle, Menu, X, LogOut, User, Settings, Building2 } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Menu, X, LogOut, User, Settings, Building2, CalendarDays } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useClerk, useUser } from "@clerk/react";
@@ -54,6 +54,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
     { href: "/invoices", label: t("nav.invoices"), icon: FileText },
     { href: "/suppliers", label: t("nav.suppliers"), icon: Building2 },
+    { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
     { href: "/invoices/new", label: t("nav.newInvoice"), icon: PlusCircle },
   ];
 

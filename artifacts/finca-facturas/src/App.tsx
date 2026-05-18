@@ -13,6 +13,7 @@ import { InvoiceNew } from "@/pages/invoice-new";
 import { InvoiceDetail } from "@/pages/invoice-detail";
 import { SettingsPage } from "@/pages/settings";
 import { SuppliersPage } from "@/pages/suppliers";
+import { CalendarPage } from "@/pages/calendar";
 import NotFound from "@/pages/not-found";
 import { SettingsProvider } from "@/contexts/settings-context";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
@@ -170,6 +171,7 @@ function AuthGuard() {
             <Route path="/invoices/new" component={InvoiceNew} />
             <Route path="/invoices/:id" component={InvoiceDetail} />
             <Route path="/suppliers" component={SuppliersPage} />
+            <Route path="/calendar" component={CalendarPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route component={NotFound} />
           </Switch>

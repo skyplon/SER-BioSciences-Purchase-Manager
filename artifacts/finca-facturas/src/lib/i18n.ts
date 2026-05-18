@@ -101,6 +101,15 @@ const translations = {
     "suppliers.totalSuppliers": "proveedores",
     "suppliers.totalSpend": "gasto total",
     "nav.suppliers": "Proveedores",
+    "nav.calendar": "Calendario",
+
+    "calendar.title": "Calendario de Gastos",
+    "calendar.subtitle": "Vista mensual de facturas",
+    "calendar.today": "Hoy",
+    "calendar.totalInvoices": "facturas este mes",
+    "calendar.totalSpend": "gasto total del mes",
+    "calendar.busiestDay": "día más activo",
+    "calendar.more": "más",
 
     "invoiceNew.title": "Nueva Factura",
     "invoiceNew.subtitle": "Captura o carga un archivo de la factura",
@@ -363,6 +372,15 @@ const translations = {
     "suppliers.totalSuppliers": "suppliers",
     "suppliers.totalSpend": "total spend",
     "nav.suppliers": "Suppliers",
+    "nav.calendar": "Calendar",
+
+    "calendar.title": "Expense Calendar",
+    "calendar.subtitle": "Monthly invoice view",
+    "calendar.today": "Today",
+    "calendar.totalInvoices": "invoices this month",
+    "calendar.totalSpend": "total spend this month",
+    "calendar.busiestDay": "busiest day",
+    "calendar.more": "more",
 
     "invoiceNew.title": "New Invoice",
     "invoiceNew.subtitle": "Capture or upload a photo of the invoice",

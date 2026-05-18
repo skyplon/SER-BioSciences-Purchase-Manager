@@ -83,8 +83,14 @@ export function InvoicesList() {
     const params = new URLSearchParams(window.location.search);
     return params.get("search") ?? params.get("supplier") ?? "";
   });
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get("startDate") ?? "";
+  });
+  const [endDate, setEndDate] = useState<string>(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get("endDate") ?? "";
+  });
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [sortField, setSortField] = useState<SortField | null>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
