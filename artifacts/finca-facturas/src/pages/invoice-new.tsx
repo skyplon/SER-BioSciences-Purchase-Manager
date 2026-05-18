@@ -441,6 +441,17 @@ export function InvoiceNew() {
     }
   };
 
+  const hasFile = !!(imageBase64 || docxName);
+
+  const allFieldsFilled =
+    supplier.trim() !== "" &&
+    invoiceNumber.trim() !== "" &&
+    !!date &&
+    !!buyer &&
+    !!totalAmount &&
+    description.trim() !== "" &&
+    notes.trim() !== "";
+
   const isItemValid = (item: ItemRow) =>
     item.name.trim() && item.description.trim() && item.quantity && item.unit.trim() && item.unitPrice && item.totalPrice;
 
@@ -992,7 +1003,7 @@ export function InvoiceNew() {
           variant="outline"
           className="w-full sm:w-auto"
           onClick={handleComplete}
-          disabled={completing || extracting}
+          disabled={!hasFile || completing || extracting}
           data-testid="button-complete-invoice"
         >
           {completing ? (
@@ -1006,7 +1017,7 @@ export function InvoiceNew() {
           variant="outline"
           className="w-full sm:w-auto"
           onClick={handleValidate}
-          disabled={validating || completing || extracting}
+          disabled={!allFieldsFilled || validating || completing || extracting}
           data-testid="button-validate-invoice"
         >
           {validating ? (
@@ -1019,7 +1030,7 @@ export function InvoiceNew() {
         <Button
           className="w-full sm:w-auto"
           onClick={handleSave}
-          disabled={createMutation.isPending || !supplier.trim()}
+          disabled={!allFieldsFilled || createMutation.isPending}
           data-testid="button-save-invoice"
         >
           {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
