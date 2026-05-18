@@ -437,6 +437,7 @@ export function InvoicesList() {
       ) : (
         <div className="border rounded-lg overflow-hidden" data-testid="table-invoices">
           <div className="overflow-x-auto">
+
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
@@ -507,6 +508,34 @@ export function InvoicesList() {
               </tbody>
             </table>
           </div>
+
+          {/* Footer: count + total */}
+          {(() => {
+            const filteredTotal = sortedInvoices.reduce((sum, inv) => sum + (inv.totalAmount ?? 0), 0);
+            const count = sortedInvoices.length;
+            const selectedTotal = someSelected
+              ? sortedInvoices.filter((inv) => selectedIds.has(inv.id)).reduce((sum, inv) => sum + (inv.totalAmount ?? 0), 0)
+              : null;
+            return (
+              <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 py-3 border-t bg-muted/30 text-sm" data-testid="table-footer-totals">
+                <span className="text-muted-foreground">
+                  {count} {hasFilters ? t("invoices.footerFiltered") : t("invoices.footerTotal")}
+                </span>
+                <div className="flex items-center gap-6">
+                  {selectedTotal !== null && (
+                    <span className="text-muted-foreground">
+                      {t("invoices.footerSelectedLabel")}{" "}
+                      <span className="font-semibold text-foreground">{formatCurrency(selectedTotal)}</span>
+                    </span>
+                  )}
+                  <span className="text-muted-foreground">
+                    {hasFilters ? t("invoices.footerFilteredTotal") : t("invoices.footerGrandTotal")}{" "}
+                    <span className="font-bold text-foreground">{formatCurrency(filteredTotal)}</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

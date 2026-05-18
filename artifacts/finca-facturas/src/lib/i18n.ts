@@ -75,6 +75,11 @@ const translations = {
     "invoices.bulkDeleteSelected": "Eliminar seleccionadas",
     "invoices.bulkSelected": "seleccionadas",
     "invoices.bulkClearSelection": "Limpiar selección",
+    "invoices.footerTotal": "facturas en total",
+    "invoices.footerFiltered": "facturas filtradas",
+    "invoices.footerGrandTotal": "Total:",
+    "invoices.footerFilteredTotal": "Total filtrado:",
+    "invoices.footerSelectedLabel": "Seleccionadas:",
 
     "invoiceNew.title": "Nueva Factura",
     "invoiceNew.subtitle": "Captura o carga un archivo de la factura",
@@ -306,6 +311,11 @@ const translations = {
     "invoices.bulkDeleteSelected": "Delete selected",
     "invoices.bulkSelected": "selected",
     "invoices.bulkClearSelection": "Clear selection",
+    "invoices.footerTotal": "invoices total",
+    "invoices.footerFiltered": "filtered invoices",
+    "invoices.footerGrandTotal": "Total:",
+    "invoices.footerFilteredTotal": "Filtered total:",
+    "invoices.footerSelectedLabel": "Selected:",
 
     "invoiceNew.title": "New Invoice",
     "invoiceNew.subtitle": "Capture or upload a photo of the invoice",
