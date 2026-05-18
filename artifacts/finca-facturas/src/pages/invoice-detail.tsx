@@ -7,6 +7,7 @@ import {
   useUpdateInvoice,
   getListInvoicesQueryKey,
 } from "@workspace/api-client-react";
+import type { CreateInvoiceItemBody } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { CATEGORIES } from "@/lib/categories";
@@ -36,7 +37,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft, Download, Pencil, Check, X } from "lucide-react";
+import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft, Download, Pencil, Check, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
 
@@ -57,6 +58,7 @@ export function InvoiceDetail() {
   const [editTotal, setEditTotal] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [editItems, setEditItems] = useState<CreateInvoiceItemBody[]>([]);
 
   const { data: invoice, isLoading } = useGetInvoice(id, {
     query: { enabled: !!id, queryKey: getGetInvoiceQueryKey(id) },
@@ -99,6 +101,16 @@ export function InvoiceDetail() {
     setEditTotal(invoice.totalAmount != null ? String(invoice.totalAmount) : "");
     setEditDescription(invoice.description ?? "");
     setEditNotes(invoice.notes ?? "");
+    setEditItems(
+      (invoice.items ?? []).map((item) => ({
+        name: item.name,
+        description: item.description,
+        quantity: item.quantity ?? null,
+        unit: item.unit ?? null,
+        unitPrice: item.unitPrice ?? null,
+        totalPrice: item.totalPrice ?? null,
+      }))
+    );
     setIsEditing(true);
   };
 
@@ -114,8 +126,32 @@ export function InvoiceDetail() {
         totalAmount: editTotal ? parseFloat(editTotal) : null,
         description: editDescription || null,
         notes: editNotes || null,
+        items: editItems,
       },
     });
+  };
+
+  const handleItemChange = (idx: number, field: keyof CreateInvoiceItemBody, value: string) => {
+    setEditItems((prev) =>
+      prev.map((item, i) => {
+        if (i !== idx) return item;
+        if (field === "quantity" || field === "unitPrice" || field === "totalPrice") {
+          return { ...item, [field]: value === "" ? null : parseFloat(value) };
+        }
+        return { ...item, [field]: value };
+      })
+    );
+  };
+
+  const handleAddItem = () => {
+    setEditItems((prev) => [
+      ...prev,
+      { name: "", description: "", quantity: null, unit: null, unitPrice: null, totalPrice: null },
+    ]);
+  };
+
+  const handleRemoveItem = (idx: number) => {
+    setEditItems((prev) => prev.filter((_, i) => i !== idx));
   };
 
   if (isLoading) {
@@ -393,44 +429,139 @@ export function InvoiceDetail() {
       )}
 
       {/* Items */}
-      {invoice.items && invoice.items.length > 0 && (
+      {(isEditing || (invoice.items && invoice.items.length > 0)) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t("invoiceDetail.items")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm" data-testid="table-invoice-items">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemDescription")}</th>
-                    <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemQty")}</th>
-                    <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemUnit")}</th>
-                    <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemUnitPrice")}</th>
-                    <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemTotal")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {invoice.items.map((item, idx) => (
-                    <tr key={item.id} data-testid={`row-item-detail-${idx}`}>
-                      <td className="py-2 pr-4">{item.description}</td>
-                      <td className="py-2 text-right">{item.quantity ?? "—"}</td>
-                      <td className="py-2 px-4 text-muted-foreground">{item.unit ?? "—"}</td>
-                      <td className="py-2 text-right">{item.unitPrice != null ? formatCurrency(item.unitPrice) : "—"}</td>
-                      <td className="py-2 text-right font-medium">{item.totalPrice != null ? formatCurrency(item.totalPrice) : "—"}</td>
+            {isEditing ? (
+              <div className="space-y-2">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemDescription")}</th>
+                        <th className="text-right pb-2 font-medium text-muted-foreground w-20">{t("invoiceDetail.itemQty")}</th>
+                        <th className="text-left pb-2 font-medium text-muted-foreground w-24 px-2">{t("invoiceDetail.itemUnit")}</th>
+                        <th className="text-right pb-2 font-medium text-muted-foreground w-28">{t("invoiceDetail.itemUnitPrice")}</th>
+                        <th className="text-right pb-2 font-medium text-muted-foreground w-28">{t("invoiceDetail.itemTotal")}</th>
+                        <th className="w-8" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {editItems.map((item, idx) => (
+                        <tr key={idx} data-testid={`row-item-edit-${idx}`}>
+                          <td className="py-1 pr-2">
+                            <Input
+                              value={item.description}
+                              onChange={(e) => handleItemChange(idx, "description", e.target.value)}
+                              placeholder={t("invoiceDetail.itemDescription")}
+                              className="h-8 text-sm"
+                              data-testid={`edit-item-description-${idx}`}
+                            />
+                          </td>
+                          <td className="py-1 px-1">
+                            <Input
+                              type="number"
+                              value={item.quantity ?? ""}
+                              onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+                              placeholder="—"
+                              className="h-8 text-sm text-right w-20"
+                              data-testid={`edit-item-qty-${idx}`}
+                            />
+                          </td>
+                          <td className="py-1 px-1">
+                            <Input
+                              value={item.unit ?? ""}
+                              onChange={(e) => handleItemChange(idx, "unit", e.target.value)}
+                              placeholder="—"
+                              className="h-8 text-sm w-24"
+                              data-testid={`edit-item-unit-${idx}`}
+                            />
+                          </td>
+                          <td className="py-1 px-1">
+                            <Input
+                              type="number"
+                              value={item.unitPrice ?? ""}
+                              onChange={(e) => handleItemChange(idx, "unitPrice", e.target.value)}
+                              placeholder="—"
+                              className="h-8 text-sm text-right w-28"
+                              data-testid={`edit-item-unit-price-${idx}`}
+                            />
+                          </td>
+                          <td className="py-1 pl-1">
+                            <Input
+                              type="number"
+                              value={item.totalPrice ?? ""}
+                              onChange={(e) => handleItemChange(idx, "totalPrice", e.target.value)}
+                              placeholder="—"
+                              className="h-8 text-sm text-right w-28"
+                              data-testid={`edit-item-total-${idx}`}
+                            />
+                          </td>
+                          <td className="py-1 pl-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => handleRemoveItem(idx)}
+                              title={t("invoiceDetail.removeItem")}
+                              data-testid={`button-remove-item-${idx}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={handleAddItem}
+                  data-testid="button-add-item"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t("invoiceDetail.addItem")}
+                </Button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="table-invoice-items">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemDescription")}</th>
+                      <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemQty")}</th>
+                      <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemUnit")}</th>
+                      <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemUnitPrice")}</th>
+                      <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemTotal")}</th>
                     </tr>
-                  ))}
-                </tbody>
-                {invoice.totalAmount != null && (
-                  <tfoot>
-                    <tr className="border-t border-border">
-                      <td colSpan={4} className="pt-3 text-right font-semibold">{t("invoiceDetail.invoiceTotal")}</td>
-                      <td className="pt-3 text-right font-bold">{formatCurrency(invoice.totalAmount)}</td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {invoice.items.map((item, idx) => (
+                      <tr key={item.id} data-testid={`row-item-detail-${idx}`}>
+                        <td className="py-2 pr-4">{item.description}</td>
+                        <td className="py-2 text-right">{item.quantity ?? "—"}</td>
+                        <td className="py-2 px-4 text-muted-foreground">{item.unit ?? "—"}</td>
+                        <td className="py-2 text-right">{item.unitPrice != null ? formatCurrency(item.unitPrice) : "—"}</td>
+                        <td className="py-2 text-right font-medium">{item.totalPrice != null ? formatCurrency(item.totalPrice) : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  {invoice.totalAmount != null && (
+                    <tfoot>
+                      <tr className="border-t border-border">
+                        <td colSpan={4} className="pt-3 text-right font-semibold">{t("invoiceDetail.invoiceTotal")}</td>
+                        <td className="pt-3 text-right font-bold">{formatCurrency(invoice.totalAmount)}</td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

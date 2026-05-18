@@ -321,6 +321,7 @@ router.patch("/invoices/:id", async (req, res): Promise<void> => {
   if (invoiceData.date !== undefined) updateData.date = invoiceData.date;
   if (invoiceData.category !== undefined) updateData.category = invoiceData.category;
   if (invoiceData.totalAmount !== undefined) updateData.totalAmount = invoiceData.totalAmount != null ? String(invoiceData.totalAmount) : null;
+  if (invoiceData.description !== undefined) updateData.description = invoiceData.description;
   if (invoiceData.notes !== undefined) updateData.notes = invoiceData.notes;
   if (invoiceData.buyer !== undefined) updateData.buyer = invoiceData.buyer;
 
@@ -343,6 +344,7 @@ router.patch("/invoices/:id", async (req, res): Promise<void> => {
       await db.insert(invoiceItemsTable).values(
         items.map((item) => ({
           invoiceId: params.data.id,
+          name: item.name ?? item.description,
           description: item.description,
           quantity: item.quantity != null ? String(item.quantity) : null,
           unit: item.unit ?? null,

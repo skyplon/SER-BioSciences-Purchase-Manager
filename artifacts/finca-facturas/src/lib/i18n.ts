@@ -149,6 +149,8 @@ const translations = {
     "invoiceDetail.saveSuccess": "Factura actualizada",
     "invoiceDetail.errorSaving": "Error al guardar",
     "invoiceDetail.category": "Categoría",
+    "invoiceDetail.addItem": "Agregar artículo",
+    "invoiceDetail.removeItem": "Eliminar fila",
 
     "settings.title": "Configuración",
     "settings.subtitle": "Personaliza la aplicación según tus preferencias",
@@ -337,6 +339,8 @@ const translations = {
     "invoiceDetail.saveSuccess": "Invoice updated",
     "invoiceDetail.errorSaving": "Error saving",
     "invoiceDetail.category": "Category",
+    "invoiceDetail.addItem": "Add item",
+    "invoiceDetail.removeItem": "Remove row",
 
     "settings.title": "Settings",
     "settings.subtitle": "Customize the application to your preferences",
