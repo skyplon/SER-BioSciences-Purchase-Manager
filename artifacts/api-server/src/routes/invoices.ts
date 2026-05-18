@@ -324,6 +324,7 @@ router.patch("/invoices/:id", async (req, res): Promise<void> => {
   if (invoiceData.description !== undefined) updateData.description = invoiceData.description;
   if (invoiceData.notes !== undefined) updateData.notes = invoiceData.notes;
   if (invoiceData.buyer !== undefined) updateData.buyer = invoiceData.buyer;
+  if (invoiceData.updatedBy !== undefined) updateData.updatedBy = invoiceData.updatedBy;
 
   if (Object.keys(updateData).length > 0) {
     const [updated] = await db

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUser } from "@clerk/react";
 import { useRoute, useLocation, Link } from "wouter";
 import {
   useGetInvoice,
@@ -43,6 +44,7 @@ import { useT } from "@/lib/i18n";
 
 export function InvoiceDetail() {
   const t = useT();
+  const { user } = useUser();
   const [, params] = useRoute("/invoices/:id");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -115,6 +117,7 @@ export function InvoiceDetail() {
   };
 
   const handleSave = () => {
+    const updatedBy = user?.fullName ?? user?.firstName ?? null;
     updateMutation.mutate({
       id,
       data: {
@@ -126,6 +129,7 @@ export function InvoiceDetail() {
         totalAmount: editTotal ? parseFloat(editTotal) : null,
         description: editDescription || null,
         notes: editNotes || null,
+        updatedBy,
         items: editItems,
       },
     });

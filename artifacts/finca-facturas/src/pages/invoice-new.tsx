@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useExtractInvoiceData, useValidateInvoiceData, useCreateInvoice, getListInvoicesQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@clerk/react";
+import { useAuth, useUser } from "@clerk/react";
 import * as pdfjsLib from "pdfjs-dist";
 import mammoth from "mammoth";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,7 @@ export function InvoiceNew() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { getToken } = useAuth();
+  const { user } = useUser();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const unifiedFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -386,6 +387,7 @@ export function InvoiceNew() {
       return;
     }
 
+    const createdBy = user?.fullName ?? user?.firstName ?? null;
     createMutation.mutate({
       data: {
         supplier: supplier.trim(),
@@ -397,6 +399,7 @@ export function InvoiceNew() {
         description: description.trim(),
         notes: notes.trim(),
         buyer,
+        createdBy,
         items: validItems.map((item) => ({
           name: item.name.trim(),
           description: item.description.trim(),

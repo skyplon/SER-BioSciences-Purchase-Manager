@@ -24,5 +24,7 @@ export interface CreateInvoiceBody {
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
   items?: CreateInvoiceItemBody[];
 }

@@ -257,6 +257,10 @@ components:
           type: ["string", "null"]
         buyer:
           type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
+        updatedBy:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -319,6 +323,8 @@ components:
           type: ["string", "null"]
         buyer:
           type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
         items:
           type: array
           items:
@@ -364,6 +370,8 @@ components:
         notes:
           type: ["string", "null"]
         buyer:
+          type: ["string", "null"]
+        updatedBy:
           type: ["string", "null"]
         items:
           type: array

@@ -14,6 +14,8 @@ export const invoicesTable = pgTable("invoices", {
   description: text("description"),
   notes: text("notes"),
   buyer: text("buyer"),
+  createdBy: text("created_by"),
+  updatedBy: text("updated_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

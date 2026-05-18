@@ -42,6 +42,10 @@ export interface Invoice {
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  /** @nullable */
+  updatedBy?: string | null;
   createdAt: string;
   updatedAt: string;
   items: InvoiceItem[];
@@ -77,6 +81,8 @@ export interface CreateInvoiceBody {
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
   items?: CreateInvoiceItemBody[];
 }
 
@@ -95,6 +101,8 @@ export interface UpdateInvoiceBody {
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;
+  /** @nullable */
+  updatedBy?: string | null;
   items?: CreateInvoiceItemBody[];
 }
 

@@ -6,6 +6,7 @@ import {
   useExportInvoices,
   getExportInvoicesQueryKey,
 } from "@workspace/api-client-react";
+import type { Invoice } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -14,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -31,12 +33,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Download, Trash2, Eye, Search, X, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PlusCircle, Download, Trash2, Eye, Search, X, ChevronUp, ChevronDown, ChevronsUpDown, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
 
-type SortField = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount" | "createdAt";
+type ColKey = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount" | "createdAt" | "updatedAt" | "createdBy" | "updatedBy";
+type SortField = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount" | "createdAt" | "updatedAt";
 type SortDir = "asc" | "desc";
+
+const ALL_COLUMNS: ColKey[] = [
+  "date", "supplier", "invoiceNumber", "category", "totalAmount",
+  "createdAt", "updatedAt", "createdBy", "updatedBy",
+];
+
+const COLS_STORAGE_KEY = "invoice-list-cols";
+
+function loadVisibleCols(): ColKey[] {
+  try {
+    const stored = localStorage.getItem(COLS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as ColKey[];
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return ALL_COLUMNS;
+}
 
 function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: SortField | null; sortDir: SortDir }) {
   if (sortField !== field) return <ChevronsUpDown className="h-3.5 w-3.5 ml-1 inline opacity-40" />;
@@ -56,12 +82,37 @@ export function InvoicesList() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [sortField, setSortField] = useState<SortField | null>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [visibleCols, setVisibleCols] = useState<ColKey[]>(loadVisibleCols);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
+  const COL_LABELS: Record<ColKey, string> = {
+    date: t("invoices.colPurchaseDate"),
+    supplier: t("invoices.colSupplier"),
+    invoiceNumber: t("invoices.colNumber"),
+    category: t("invoices.colCategory"),
+    totalAmount: t("invoices.colTotal"),
+    createdAt: t("invoices.colCreatedAt"),
+    updatedAt: t("invoices.colUpdatedAt"),
+    createdBy: t("invoices.colCreatedBy"),
+    updatedBy: t("invoices.colUpdatedBy"),
+  };
+
+  const SORTABLE: Set<ColKey> = new Set(["date", "supplier", "invoiceNumber", "category", "totalAmount", "createdAt", "updatedAt"]);
+
+  const toggleCol = (col: ColKey) => {
+    setVisibleCols((prev) => {
+      const next = prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col];
+      try { localStorage.setItem(COLS_STORAGE_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const handleSort = (field: ColKey) => {
+    if (!SORTABLE.has(field)) return;
+    const sf = field as SortField;
+    if (sortField === sf) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
-      setSortField(field);
+      setSortField(sf);
       setSortDir("asc");
     }
   };
@@ -123,30 +174,50 @@ export function InvoicesList() {
     if (!sortField) return 0;
     let valA: string | number | null = null;
     let valB: string | number | null = null;
-    if (sortField === "date") {
-      valA = a.date ?? "";
-      valB = b.date ?? "";
-    } else if (sortField === "supplier") {
-      valA = a.supplier.toLowerCase();
-      valB = b.supplier.toLowerCase();
-    } else if (sortField === "invoiceNumber") {
-      valA = a.invoiceNumber ?? "";
-      valB = b.invoiceNumber ?? "";
-    } else if (sortField === "category") {
-      valA = a.category.toLowerCase();
-      valB = b.category.toLowerCase();
-    } else if (sortField === "totalAmount") {
-      valA = a.totalAmount ?? 0;
-      valB = b.totalAmount ?? 0;
-    } else if (sortField === "createdAt") {
-      valA = a.createdAt;
-      valB = b.createdAt;
-    }
+    if (sortField === "date") { valA = a.date ?? ""; valB = b.date ?? ""; }
+    else if (sortField === "supplier") { valA = a.supplier.toLowerCase(); valB = b.supplier.toLowerCase(); }
+    else if (sortField === "invoiceNumber") { valA = a.invoiceNumber ?? ""; valB = b.invoiceNumber ?? ""; }
+    else if (sortField === "category") { valA = a.category.toLowerCase(); valB = b.category.toLowerCase(); }
+    else if (sortField === "totalAmount") { valA = a.totalAmount ?? 0; valB = b.totalAmount ?? 0; }
+    else if (sortField === "createdAt") { valA = a.createdAt; valB = b.createdAt; }
+    else if (sortField === "updatedAt") { valA = a.updatedAt; valB = b.updatedAt; }
     if (valA === null || valB === null) return 0;
     if (valA < valB) return sortDir === "asc" ? -1 : 1;
     if (valA > valB) return sortDir === "asc" ? 1 : -1;
     return 0;
   });
+
+  const renderCell = (inv: Invoice, col: ColKey) => {
+    switch (col) {
+      case "date":
+        return <td key={col} className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(inv.date)}</td>;
+      case "supplier":
+        return <td key={col} className="px-4 py-3 font-medium text-foreground">{inv.supplier}</td>;
+      case "invoiceNumber":
+        return <td key={col} className="px-4 py-3 text-muted-foreground">{inv.invoiceNumber ?? "—"}</td>;
+      case "category":
+        return (
+          <td key={col} className="px-4 py-3">
+            <Badge
+              className="text-xs text-white border-0"
+              style={{ backgroundColor: CATEGORIES[inv.category]?.color ?? "#888" }}
+            >
+              {inv.category}
+            </Badge>
+          </td>
+        );
+      case "totalAmount":
+        return <td key={col} className="px-4 py-3 text-right font-medium">{formatCurrency(inv.totalAmount)}</td>;
+      case "createdAt":
+        return <td key={col} className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(inv.createdAt)}</td>;
+      case "updatedAt":
+        return <td key={col} className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(inv.updatedAt)}</td>;
+      case "createdBy":
+        return <td key={col} className="px-4 py-3 text-muted-foreground">{inv.createdBy ?? "—"}</td>;
+      case "updatedBy":
+        return <td key={col} className="px-4 py-3 text-muted-foreground">{inv.updatedBy ?? "—"}</td>;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -156,6 +227,28 @@ export function InvoicesList() {
           <p className="text-sm text-muted-foreground">{t("invoices.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" title={t("invoices.configureColumns")} data-testid="button-configure-columns">
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52 p-3">
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">{t("invoices.columns")}</p>
+              <div className="space-y-2">
+                {ALL_COLUMNS.map((col) => (
+                  <label key={col} className="flex items-center gap-2 cursor-pointer select-none">
+                    <Checkbox
+                      checked={visibleCols.includes(col)}
+                      onCheckedChange={() => toggleCol(col)}
+                      id={`col-toggle-${col}`}
+                    />
+                    <span className="text-sm">{COL_LABELS[col]}</span>
+                  </label>
+                ))}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
             onClick={handleExport}
@@ -244,25 +337,19 @@ export function InvoicesList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  {(["date", "createdAt", "supplier", "invoiceNumber", "category", "totalAmount"] as SortField[]).map((field) => {
-                    const labels: Record<SortField, string> = {
-                      date: t("invoices.colPurchaseDate"),
-                      createdAt: t("invoices.colCreatedAt"),
-                      supplier: t("invoices.colSupplier"),
-                      invoiceNumber: t("invoices.colNumber"),
-                      category: t("invoices.colCategory"),
-                      totalAmount: t("invoices.colTotal"),
-                    };
-                    const isRight = field === "totalAmount";
+                  {ALL_COLUMNS.filter((col) => visibleCols.includes(col)).map((col) => {
+                    const isSortable = SORTABLE.has(col);
+                    const sf = col as SortField;
+                    const isRight = col === "totalAmount";
                     return (
                       <th
-                        key={field}
-                        className={`px-4 py-3 font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors whitespace-nowrap ${isRight ? "text-right" : "text-left"}`}
-                        onClick={() => handleSort(field)}
-                        data-testid={`th-sort-${field}`}
+                        key={col}
+                        className={`px-4 py-3 font-medium text-muted-foreground select-none whitespace-nowrap transition-colors ${isRight ? "text-right" : "text-left"} ${isSortable ? "cursor-pointer hover:text-foreground" : ""}`}
+                        onClick={isSortable ? () => handleSort(col) : undefined}
+                        data-testid={isSortable ? `th-sort-${col}` : undefined}
                       >
-                        {labels[field]}
-                        <SortIcon field={field} sortField={sortField} sortDir={sortDir} />
+                        {COL_LABELS[col]}
+                        {isSortable && <SortIcon field={sf} sortField={sortField} sortDir={sortDir} />}
                       </th>
                     );
                   })}
@@ -272,19 +359,7 @@ export function InvoicesList() {
               <tbody className="divide-y divide-border">
                 {sortedInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-muted/30 transition-colors" data-testid={`row-invoice-${inv.id}`}>
-                    <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.date)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.createdAt)}</td>
-                    <td className="px-4 py-3 font-medium text-foreground">{inv.supplier}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{inv.invoiceNumber ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className="text-xs text-white border-0"
-                        style={{ backgroundColor: CATEGORIES[inv.category]?.color ?? "#888" }}
-                      >
-                        {inv.category}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium">{formatCurrency(inv.totalAmount)}</td>
+                    {ALL_COLUMNS.filter((col) => visibleCols.includes(col)).map((col) => renderCell(inv, col))}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <Link href={`/invoices/${inv.id}`}>

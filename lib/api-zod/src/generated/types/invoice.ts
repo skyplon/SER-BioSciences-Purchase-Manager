@@ -25,6 +25,10 @@ export interface Invoice {
   notes?: string | null;
   /** @nullable */
   buyer?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  /** @nullable */
+  updatedBy?: string | null;
   createdAt: string;
   updatedAt: string;
   items: InvoiceItem[];
