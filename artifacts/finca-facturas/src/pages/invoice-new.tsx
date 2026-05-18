@@ -384,8 +384,15 @@ export function InvoiceNew() {
       const { updated } = handleFillPrices();
       const completedItems = updated.filter((i) => i.name.trim() || i.description.trim());
 
-      const data = await validateMutation.mutateAsync({
-        data: {
+      const token = await getToken();
+      const response = await fetch("/api/ocr/complete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          imageBase64: imageBase64 || null,
           invoiceNumber: invoiceNumber || null,
           supplier: supplier || null,
           date: date || null,
@@ -393,7 +400,6 @@ export function InvoiceNew() {
           totalAmount: totalAmount ? parseFloat(totalAmount) : null,
           description: description || null,
           notes: notes || null,
-          buyer: buyer || null,
           items: completedItems.map((i) => ({
             name: i.name.trim() || i.description.trim(),
             description: i.description.trim() || i.name.trim(),
@@ -402,27 +408,28 @@ export function InvoiceNew() {
             unitPrice: i.unitPrice ? parseFloat(i.unitPrice) : null,
             totalPrice: i.totalPrice ? parseFloat(i.totalPrice) : null,
           })),
-        },
+        }),
       });
+      if (!response.ok) throw new Error("API error");
+      const data = await response.json() as Record<string, unknown>;
 
-      if (data.supplier) setSupplier(data.supplier);
-      if (data.invoiceNumber) setInvoiceNumber(data.invoiceNumber);
-      if (data.date) setDate(data.date);
-      if (data.category) setCategory(data.category);
+      if (data.supplier) setSupplier(data.supplier as string);
+      if (data.invoiceNumber) setInvoiceNumber(data.invoiceNumber as string);
+      if (data.date) setDate(data.date as string);
+      if (data.category) setCategory(data.category as string);
       if (data.totalAmount != null) setTotalAmount(String(data.totalAmount));
-      if (data.description) setDescription(data.description);
-      if (data.notes) setNotes(data.notes);
-      if (data.items && data.items.length > 0) {
-        setItems(
-          data.items.map((item) => ({
-            name: item.name ?? "",
-            description: item.description ?? "",
-            quantity: item.quantity != null ? String(item.quantity) : "",
-            unit: item.unit ?? "",
-            unitPrice: item.unitPrice != null ? String(item.unitPrice) : "",
-            totalPrice: item.totalPrice != null ? String(item.totalPrice) : "",
-          }))
-        );
+      if (data.description) setDescription(data.description as string);
+      if (data.notes) setNotes(data.notes as string);
+      const rawItems = data.items as Array<Record<string, unknown>> | undefined;
+      if (rawItems && rawItems.length > 0) {
+        setItems(rawItems.map((item) => ({
+          name: String(item.name ?? ""),
+          description: String(item.description ?? ""),
+          quantity: item.quantity != null ? String(item.quantity) : "",
+          unit: String(item.unit ?? ""),
+          unitPrice: item.unitPrice != null ? String(item.unitPrice) : "",
+          totalPrice: item.totalPrice != null ? String(item.totalPrice) : "",
+        })));
       }
       finishAi(true);
       toast({ title: t("invoiceNew.completeOk") });

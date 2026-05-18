@@ -175,6 +175,70 @@ ${JSON.stringify(data, null, 2)}`;
   res.json(validated);
 });
 
+router.post("/ocr/complete", async (req, res): Promise<void> => {
+  const { imageBase64, ...formData } = req.body as { imageBase64?: string } & Record<string, unknown>;
+
+  const completePrompt = `Eres un asistente especializado en COMPLETAR datos faltantes de facturas de fincas colombianas.
+
+Se te proporcionan los datos actuales de una factura (algunos campos pueden ser null o estar vacíos). Tu tarea principal es COMPLETAR todos los campos que puedas inferir con alta certeza. Usa TODAS las fuentes disponibles:
+${imageBase64 ? "- La imagen de la factura adjunta (fuente principal, léela con atención)\n" : ""}- El campo "description": describe qué se compró y a quién
+- El campo "notes": frecuentemente contiene nombre del proveedor, NIT, número de factura, dirección
+- Los "items": permiten inferir proveedor y categoría
+
+Reglas de completado:
+1. "supplier": búscalo en notes (ej. "• Proveedor: ...", "• NIT ..."), en description, o directamente en la imagen. Devuelve en Title Case.
+2. "invoiceNumber": búscalo en notes (ej. "• Factura No:", "• No.:", "• Número de factura:") o en la imagen.
+3. "date": si aparece en notes o en la imagen y está null, complétala en formato YYYY-MM-DD.
+4. "category": si está en "Otros" pero los artículos claramente indican otra categoría, corrígela. Opciones: Alimentación animal, Construcción, Consumibles del Laboratorio, Energía, Gasolina, Limpieza, Salud Animal, Transporte, Otros.
+5. "totalAmount": si está null y puedes calcularlo sumando los items, complétalo.
+6. "description": si está null, genera una (máximo 2 oraciones) basada en los artículos y el proveedor.
+7. "notes": enriquece con contexto útil si ya tienes algo; no borres información existente.
+8. Para cada item: si "unitPrice" o "totalPrice" son null y se puede calcular uno del otro con la cantidad, calcúlalo.
+
+IMPORTANTE: No inventes datos sin certeza. Si no puedes inferir un campo con alta confianza, déjalo como estaba (null si era null).
+
+Devuelve ÚNICAMENTE el JSON completado con esta estructura exacta (sin texto adicional):
+{
+  "invoiceNumber": string o null,
+  "supplier": string o null,
+  "date": string YYYY-MM-DD o null,
+  "category": "una de: Alimentación animal, Construcción, Consumibles del Laboratorio, Energía, Gasolina, Limpieza, Salud Animal, Transporte, Otros",
+  "totalAmount": número o null,
+  "description": string o null,
+  "notes": string o null,
+  "items": [
+    ${ITEM_JSON}
+  ]
+}
+
+Datos actuales de la factura:
+${JSON.stringify(formData, null, 2)}`;
+
+  const userContent: Array<{ type: string; text?: string; image_url?: { url: string; detail: string } }> = imageBase64
+    ? [
+        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}`, detail: "high" } },
+        { type: "text", text: completePrompt },
+      ]
+    : [{ type: "text", text: completePrompt }];
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-5.2",
+    max_completion_tokens: 8192,
+    messages: [{ role: "user", content: userContent as Parameters<typeof openai.chat.completions.create>[0]["messages"][0]["content"] }],
+  });
+
+  const content = response.choices[0]?.message?.content ?? "{}";
+  let completed: Record<string, unknown>;
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    completed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+  } catch {
+    completed = formData;
+  }
+
+  res.json(completed);
+});
+
 router.post("/ocr/extract-text", async (req, res): Promise<void> => {
   const { text } = req.body as { text?: unknown };
   if (!text || typeof text !== "string") {
