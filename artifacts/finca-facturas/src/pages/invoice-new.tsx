@@ -985,7 +985,7 @@ export function InvoiceNew() {
           variant="outline"
           className="w-full sm:w-auto"
           onClick={handleComplete}
-          disabled={completing || !supplier.trim()}
+          disabled={completing || extracting}
           data-testid="button-complete-invoice"
         >
           {completing ? (
@@ -999,7 +999,7 @@ export function InvoiceNew() {
           variant="outline"
           className="w-full sm:w-auto"
           onClick={handleValidate}
-          disabled={validating || !supplier.trim()}
+          disabled={validating || completing || extracting}
           data-testid="button-validate-invoice"
         >
           {validating ? (
