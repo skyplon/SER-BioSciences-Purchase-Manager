@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
+import { eq, desc, sql, and, gte, lte, inArray } from "drizzle-orm";
 import { db, invoicesTable, invoiceItemsTable, notificationsTable } from "@workspace/db";
 import {
   CreateInvoiceBody,
@@ -129,11 +129,33 @@ router.get("/invoices/summary", async (_req, res): Promise<void> => {
   });
 });
 
+router.post("/invoices/bulk-delete", async (req, res): Promise<void> => {
+  const body = req.body as { ids?: unknown };
+  if (!Array.isArray(body.ids) || body.ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" });
+    return;
+  }
+  const ids = (body.ids as unknown[]).filter((id): id is number => typeof id === "number" && Number.isInteger(id));
+  if (ids.length === 0) {
+    res.status(400).json({ error: "No valid ids provided" });
+    return;
+  }
+  const deleted = await db.delete(invoicesTable).where(inArray(invoicesTable.id, ids)).returning();
+  res.json({ deleted: deleted.length });
+});
+
 router.get("/invoices/export", async (req, res): Promise<void> => {
   const lang = req.query["lang"] === "en" ? "en" : "es";
   const en = lang === "en";
 
-  const invoices = await db.select().from(invoicesTable).orderBy(desc(invoicesTable.createdAt));
+  const rawIds = req.query["ids"];
+  const filterIds = rawIds
+    ? String(rawIds).split(",").map(Number).filter((n) => !isNaN(n) && n > 0)
+    : null;
+
+  const invoices = filterIds && filterIds.length > 0
+    ? await db.select().from(invoicesTable).where(inArray(invoicesTable.id, filterIds)).orderBy(desc(invoicesTable.createdAt))
+    : await db.select().from(invoicesTable).orderBy(desc(invoicesTable.createdAt));
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Gestor de Facturas Finca";
@@ -192,7 +214,9 @@ router.get("/invoices/export", async (req, res): Promise<void> => {
   ];
   itemsSheet.getRow(1).font = { bold: true };
 
-  const items = await db.select().from(invoiceItemsTable);
+  const items = filterIds && filterIds.length > 0
+    ? await db.select().from(invoiceItemsTable).where(inArray(invoiceItemsTable.invoiceId, filterIds))
+    : await db.select().from(invoiceItemsTable);
   for (const item of items) {
     itemsSheet.addRow({
       id: item.id,

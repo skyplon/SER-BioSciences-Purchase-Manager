@@ -87,6 +87,10 @@ export function InvoicesList() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [visibleCols, setVisibleCols] = useState<ColKey[]>(loadVisibleCols);
 
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   const COL_LABELS: Record<ColKey, string> = {
     date: t("invoices.colPurchaseDate"),
     supplier: t("invoices.colSupplier"),
@@ -144,11 +148,52 @@ export function InvoicesList() {
     },
   });
 
-  const handleExport = async () => {
+  const sortedInvoices = [...(invoices ?? [])].sort((a, b) => {
+    if (!sortField) return 0;
+    let valA: string | number | null = null;
+    let valB: string | number | null = null;
+    if (sortField === "date") { valA = a.date ?? ""; valB = b.date ?? ""; }
+    else if (sortField === "supplier") { valA = a.supplier.toLowerCase(); valB = b.supplier.toLowerCase(); }
+    else if (sortField === "invoiceNumber") { valA = a.invoiceNumber ?? ""; valB = b.invoiceNumber ?? ""; }
+    else if (sortField === "category") { valA = a.category.toLowerCase(); valB = b.category.toLowerCase(); }
+    else if (sortField === "totalAmount") { valA = a.totalAmount ?? 0; valB = b.totalAmount ?? 0; }
+    else if (sortField === "createdAt") { valA = a.createdAt; valB = b.createdAt; }
+    else if (sortField === "updatedAt") { valA = a.updatedAt ?? null; valB = b.updatedAt ?? null; }
+    if (valA === null || valB === null) return 0;
+    if (valA < valB) return sortDir === "asc" ? -1 : 1;
+    if (valA > valB) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const allSelected = sortedInvoices.length > 0 && sortedInvoices.every((inv) => selectedIds.has(inv.id));
+  const someSelected = selectedIds.size > 0;
+  const indeterminate = someSelected && !allSelected;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedInvoices.map((inv) => inv.id)));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const doExport = async (ids?: number[]) => {
     setIsExporting(true);
     try {
       const token = await getToken();
-      const res = await fetch(`/api/invoices/export?lang=${language}`, {
+      const idsParam = ids && ids.length > 0 ? `&ids=${ids.join(",")}` : "";
+      const res = await fetch(`/api/invoices/export?lang=${language}${idsParam}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error("Export failed");
@@ -169,6 +214,34 @@ export function InvoicesList() {
     }
   };
 
+  const handleExport = () => doExport();
+  const handleExportSelected = () => doExport(Array.from(selectedIds));
+
+  const handleBulkDelete = async () => {
+    setIsBulkDeleting(true);
+    try {
+      const token = await getToken();
+      const res = await fetch("/api/invoices/bulk-delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      if (!res.ok) throw new Error("Bulk delete failed");
+      const { deleted } = await res.json() as { deleted: number };
+      queryClient.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
+      setSelectedIds(new Set());
+      setShowBulkDeleteDialog(false);
+      toast({ title: `${deleted} ${t("invoices.bulkDeleteSuccess")}` });
+    } catch {
+      toast({ title: t("invoices.bulkDeleteError"), variant: "destructive" });
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const clearFilters = () => {
     setCategory("");
     setSearchSupplier("");
@@ -177,23 +250,6 @@ export function InvoicesList() {
   };
 
   const hasFilters = category || searchSupplier || startDate || endDate;
-
-  const sortedInvoices = [...(invoices ?? [])].sort((a, b) => {
-    if (!sortField) return 0;
-    let valA: string | number | null = null;
-    let valB: string | number | null = null;
-    if (sortField === "date") { valA = a.date ?? ""; valB = b.date ?? ""; }
-    else if (sortField === "supplier") { valA = a.supplier.toLowerCase(); valB = b.supplier.toLowerCase(); }
-    else if (sortField === "invoiceNumber") { valA = a.invoiceNumber ?? ""; valB = b.invoiceNumber ?? ""; }
-    else if (sortField === "category") { valA = a.category.toLowerCase(); valB = b.category.toLowerCase(); }
-    else if (sortField === "totalAmount") { valA = a.totalAmount ?? 0; valB = b.totalAmount ?? 0; }
-    else if (sortField === "createdAt") { valA = a.createdAt; valB = b.createdAt; }
-    else if (sortField === "updatedAt") { valA = a.updatedAt ?? null; valB = b.updatedAt ?? null; }
-    if (valA === null || valB === null) return 0;
-    if (valA < valB) return sortDir === "asc" ? -1 : 1;
-    if (valA > valB) return sortDir === "asc" ? 1 : -1;
-    return 0;
-  });
 
   const renderCell = (inv: Invoice, col: ColKey) => {
     switch (col) {
@@ -320,6 +376,45 @@ export function InvoicesList() {
         )}
       </div>
 
+      {/* Bulk action bar */}
+      {someSelected && (
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-lg border border-primary/30 bg-primary/5">
+          <span className="text-sm font-medium text-foreground">
+            {selectedIds.size} {t("invoices.bulkSelected")}
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportSelected}
+              disabled={isExporting}
+              data-testid="button-export-selected"
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              {t("invoices.bulkExportSelected")}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowBulkDeleteDialog(true)}
+              data-testid="button-delete-selected"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              {t("invoices.bulkDeleteSelected")}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+              data-testid="button-clear-selection"
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              {t("invoices.bulkClearSelection")}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       {isLoading ? (
         <div className="space-y-2">
@@ -345,6 +440,15 @@ export function InvoicesList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
+                  <th className="px-4 py-3 w-10">
+                    <Checkbox
+                      checked={allSelected}
+                      data-state={indeterminate ? "indeterminate" : allSelected ? "checked" : "unchecked"}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all"
+                      data-testid="checkbox-select-all"
+                    />
+                  </th>
                   {ALL_COLUMNS.filter((col) => visibleCols.includes(col)).map((col) => {
                     const isSortable = SORTABLE.has(col);
                     const sf = col as SortField;
@@ -366,7 +470,19 @@ export function InvoicesList() {
               </thead>
               <tbody className="divide-y divide-border">
                 {sortedInvoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-muted/30 transition-colors" data-testid={`row-invoice-${inv.id}`}>
+                  <tr
+                    key={inv.id}
+                    className={`hover:bg-muted/30 transition-colors ${selectedIds.has(inv.id) ? "bg-primary/5" : ""}`}
+                    data-testid={`row-invoice-${inv.id}`}
+                  >
+                    <td className="px-4 py-3 w-10">
+                      <Checkbox
+                        checked={selectedIds.has(inv.id)}
+                        onCheckedChange={() => toggleSelect(inv.id)}
+                        aria-label={`Select invoice ${inv.id}`}
+                        data-testid={`checkbox-invoice-${inv.id}`}
+                      />
+                    </td>
                     {ALL_COLUMNS.filter((col) => visibleCols.includes(col)).map((col) => renderCell(inv, col))}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
@@ -394,6 +510,7 @@ export function InvoicesList() {
         </div>
       )}
 
+      {/* Single delete dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -411,6 +528,29 @@ export function InvoicesList() {
               data-testid="button-confirm-delete"
             >
               {t("invoices.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={(open) => !open && setShowBulkDeleteDialog(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("invoices.bulkDeleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("invoices.bulkDeleteDesc")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkDeleting}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              data-testid="button-confirm-bulk-delete"
+            >
+              {t("invoices.bulkDeleteConfirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
