@@ -442,6 +442,23 @@ router.delete("/invoices/:id", async (req, res): Promise<void> => {
   }).catch(() => {});
 });
 
+router.get("/suppliers", async (req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      supplier: invoicesTable.supplier,
+      count: sql<number>`COUNT(*)::int`,
+      total: sql<number>`COALESCE(SUM(${invoicesTable.totalAmount}::numeric), 0)::float`,
+      firstDate: sql<string | null>`MIN(${invoicesTable.date})`,
+      lastDate: sql<string | null>`MAX(${invoicesTable.date})`,
+      categories: sql<string[]>`ARRAY_AGG(DISTINCT ${invoicesTable.category})`,
+    })
+    .from(invoicesTable)
+    .groupBy(invoicesTable.supplier)
+    .orderBy(sql`COALESCE(SUM(${invoicesTable.totalAmount}::numeric), 0) DESC NULLS LAST`);
+
+  res.json(rows);
+});
+
 router.get("/invoices/:id/items", async (req, res): Promise<void> => {
   const params = ListInvoiceItemsParams.safeParse(req.params);
   if (!params.success) {

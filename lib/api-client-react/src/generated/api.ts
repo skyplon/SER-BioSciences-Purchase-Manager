@@ -28,6 +28,7 @@ import type {
   InvoiceSummary,
   ListInvoicesParams,
   ListNotificationsParams,
+  SupplierStats,
   UpdateInvoiceBody,
   ValidateInvoiceBody,
 } from "./api.schemas";
@@ -296,6 +297,81 @@ export const useCreateInvoice = <
 > => {
   return useMutation(getCreateInvoiceMutationOptions(options));
 };
+
+/**
+ * @summary List all suppliers with aggregated stats
+ */
+export const getListSuppliersUrl = () => {
+  return `/api/suppliers`;
+};
+
+export const listSuppliers = async (
+  options?: RequestInit,
+): Promise<SupplierStats[]> => {
+  return customFetch<SupplierStats[]>(getListSuppliersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSuppliersQueryKey = () => {
+  return [`/api/suppliers`] as const;
+};
+
+export const getListSuppliersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSuppliers>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSuppliers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSuppliersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSuppliers>>> = ({
+    signal,
+  }) => listSuppliers({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSuppliers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSuppliersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSuppliers>>
+>;
+export type ListSuppliersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all suppliers with aggregated stats
+ */
+
+export function useListSuppliers<
+  TData = Awaited<ReturnType<typeof listSuppliers>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSuppliers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSuppliersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get summary statistics for invoices

@@ -80,6 +80,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/Invoice"
 
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      tags: [invoices]
+      summary: List all suppliers with aggregated stats
+      responses:
+        "200":
+          description: List of supplier stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierStats"
+
   /invoices/summary:
     get:
       operationId: getInvoiceSummary
@@ -452,6 +467,29 @@ components:
         - supplier
         - count
         - total
+
+    SupplierStats:
+      type: object
+      properties:
+        supplier:
+          type: string
+        count:
+          type: integer
+        total:
+          type: number
+        firstDate:
+          type: ["string", "null"]
+        lastDate:
+          type: ["string", "null"]
+        categories:
+          type: array
+          items:
+            type: string
+      required:
+        - supplier
+        - count
+        - total
+        - categories
 
     ExportResponse:
       type: object

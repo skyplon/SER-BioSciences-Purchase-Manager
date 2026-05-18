@@ -127,6 +127,17 @@ export interface InvoiceSummary {
   recentInvoices: Invoice[];
 }
 
+export interface SupplierStats {
+  supplier: string;
+  count: number;
+  total: number;
+  /** @nullable */
+  firstDate?: string | null;
+  /** @nullable */
+  lastDate?: string | null;
+  categories: string[];
+}
+
 export interface ExportResponse {
   fileBase64: string;
   filename: string;

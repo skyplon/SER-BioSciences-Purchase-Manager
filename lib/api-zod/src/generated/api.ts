@@ -84,6 +84,19 @@ export const CreateInvoiceBody = zod.object({
 });
 
 /**
+ * @summary List all suppliers with aggregated stats
+ */
+export const ListSuppliersResponseItem = zod.object({
+  supplier: zod.string(),
+  count: zod.number(),
+  total: zod.number(),
+  firstDate: zod.string().nullish(),
+  lastDate: zod.string().nullish(),
+  categories: zod.array(zod.string()),
+});
+export const ListSuppliersResponse = zod.array(ListSuppliersResponseItem);
+
+/**
  * @summary Get summary statistics for invoices
  */
 export const GetInvoiceSummaryResponse = zod.object({
