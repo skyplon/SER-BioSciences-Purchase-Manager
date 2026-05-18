@@ -396,16 +396,16 @@ export function Dashboard() {
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">{inv.supplier}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(inv.date)}
-                          <span className="mx-1">·</span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-xs text-muted-foreground">{formatDate(inv.date)}</span>
+                          <span className="text-xs text-muted-foreground">·</span>
                           <Badge
                             className="text-[10px] px-1.5 py-0 h-4 font-normal border-0 text-white"
                             style={{ backgroundColor: catColor + "cc" }}
                           >
                             {inv.category}
                           </Badge>
-                        </p>
+                        </div>
                       </div>
                       <div className="ml-2 text-right flex-shrink-0">
                         <p className="text-sm font-semibold text-foreground">{formatCurrency(inv.totalAmount)}</p>
