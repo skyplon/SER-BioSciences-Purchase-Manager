@@ -677,7 +677,8 @@ export function InvoiceNew() {
           <Badge variant="outline">{items.filter((i) => i.name.trim() || i.description.trim()).length} items</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="overflow-x-auto">
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
@@ -772,6 +773,102 @@ export function InvoiceNew() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden space-y-3" data-testid="table-items">
+            {items.map((item, idx) => {
+              const hasContent = item.name.trim() || item.description.trim();
+              const showItemErr = showErrors && hasContent;
+              return (
+                <div key={idx} className="border border-border rounded-lg p-3 space-y-2" data-testid={`row-item-${idx}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">#{idx + 1}</span>
+                    {items.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => removeItem(idx)}
+                        data-testid={`button-remove-item-${idx}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">{t("invoiceNew.itemName")}</label>
+                      <Input
+                        value={item.name}
+                        onChange={(e) => updateItem(idx, "name", e.target.value)}
+                        placeholder={t("invoiceNew.itemNamePlaceholder")}
+                        data-testid={`input-item-name-${idx}`}
+                        className={cn(showItemErr && !item.name.trim() && "border-red-500 focus-visible:ring-red-500")}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">{t("invoiceNew.itemDescription")}</label>
+                      <Input
+                        value={item.description}
+                        onChange={(e) => updateItem(idx, "description", e.target.value)}
+                        placeholder={t("invoiceNew.itemDescPlaceholder")}
+                        data-testid={`input-item-description-${idx}`}
+                        className={cn(showItemErr && !item.description.trim() && "border-red-500 focus-visible:ring-red-500")}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t("invoiceNew.itemQty")}</label>
+                        <Input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => updateItem(idx, "quantity", e.target.value)}
+                          placeholder="0"
+                          data-testid={`input-item-quantity-${idx}`}
+                          className={cn(showItemErr && !item.quantity && "border-red-500 focus-visible:ring-red-500")}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t("invoiceNew.itemUnit")}</label>
+                        <Input
+                          value={item.unit}
+                          onChange={(e) => updateItem(idx, "unit", e.target.value)}
+                          placeholder="und"
+                          data-testid={`input-item-unit-${idx}`}
+                          className={cn(showItemErr && !item.unit.trim() && "border-red-500 focus-visible:ring-red-500")}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t("invoiceNew.itemUnitPrice")}</label>
+                        <Input
+                          type="number"
+                          value={item.unitPrice}
+                          onChange={(e) => updateItem(idx, "unitPrice", e.target.value)}
+                          placeholder="0"
+                          data-testid={`input-item-unit-price-${idx}`}
+                          className={cn(showItemErr && !item.unitPrice && "border-red-500 focus-visible:ring-red-500")}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t("invoiceNew.itemTotal")}</label>
+                        <Input
+                          type="number"
+                          value={item.totalPrice}
+                          onChange={(e) => updateItem(idx, "totalPrice", e.target.value)}
+                          placeholder="0"
+                          data-testid={`input-item-total-price-${idx}`}
+                          className={cn(showItemErr && !item.totalPrice && "border-red-500 focus-visible:ring-red-500")}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           <Button variant="outline" size="sm" onClick={addItem} data-testid="button-add-item">
             <Plus className="h-4 w-4 mr-2" />
             {t("invoiceNew.addItem")}
@@ -779,12 +876,14 @@ export function InvoiceNew() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center gap-3 justify-end flex-wrap">
-        <Link href="/invoices">
-          <Button variant="outline" data-testid="button-cancel-new">{t("invoiceNew.cancel")}</Button>
+      {/* Mobile: 2x2 grid; Desktop: row right-aligned */}
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-end sm:gap-3">
+        <Link href="/invoices" className="contents">
+          <Button variant="outline" className="w-full sm:w-auto" data-testid="button-cancel-new">{t("invoiceNew.cancel")}</Button>
         </Link>
         <Button
           variant="outline"
+          className="w-full sm:w-auto"
           onClick={handleComplete}
           disabled={completing || !supplier.trim()}
           data-testid="button-complete-invoice"
@@ -798,6 +897,7 @@ export function InvoiceNew() {
         </Button>
         <Button
           variant="outline"
+          className="w-full sm:w-auto"
           onClick={handleValidate}
           disabled={validating || !supplier.trim()}
           data-testid="button-validate-invoice"
@@ -810,6 +910,7 @@ export function InvoiceNew() {
           {t("invoiceNew.validateAI")}
         </Button>
         <Button
+          className="w-full sm:w-auto"
           onClick={handleSave}
           disabled={createMutation.isPending || !supplier.trim()}
           data-testid="button-save-invoice"
