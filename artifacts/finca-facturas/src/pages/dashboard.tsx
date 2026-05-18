@@ -27,9 +27,9 @@ const BRAND_TEAL = "#4d8f9c";
 const EMPTY_COLOR = "#e5e7eb";
 
 function shortCurrency(v: number): string {
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
-  return `$${Math.round(v)}`;
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M COP`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K COP`;
+  return `$${Math.round(v)} COP`;
 }
 
 function BarTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
