@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft, Download, Pencil, Check, X, Plus } from "lucide-react";
+import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft, Download, Pencil, Check, X, Plus, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
 
@@ -181,6 +181,12 @@ export function InvoiceDetail() {
 
   const catColor = CATEGORIES[invoice.category]?.color ?? "#888";
 
+  const today = new Date().toLocaleDateString("es-CO", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
@@ -231,6 +237,16 @@ export function InvoiceDetail() {
             </>
           ) : (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="no-print"
+                data-testid="button-print-invoice"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                {t("invoiceDetail.print")}
+              </Button>
               <Button
                 variant="outline"
                 size="icon"
@@ -570,10 +586,120 @@ export function InvoiceDetail() {
         </Card>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-end print-hide">
         <p className="text-xs text-muted-foreground">
           {t("invoiceDetail.registeredOn")} {formatDate(invoice.createdAt)}
         </p>
+      </div>
+
+      {/* ── PRINT LAYOUT (hidden on screen, visible when printing) ────────── */}
+      <div className="print-only print-invoice hidden" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2pt solid #111", paddingBottom: "10pt", marginBottom: "16pt" }}>
+          <div>
+            <div style={{ fontSize: "18pt", fontWeight: "bold", letterSpacing: "-0.5pt" }}>SER BioSciences</div>
+            <div style={{ fontSize: "9pt", color: "#555", marginTop: "2pt" }}>Finca Citrus & Ganadería · Colombia</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "14pt", fontWeight: "bold", color: "#333" }}>{t("invoiceDetail.printTitle")}</div>
+            <div style={{ fontSize: "9pt", color: "#555", marginTop: "3pt" }}>{t("invoiceDetail.printGeneratedOn")}: {today}</div>
+          </div>
+        </div>
+
+        {/* Metadata grid */}
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "14pt", fontSize: "10pt" }}>
+          <tbody>
+            <tr>
+              <td style={{ width: "18%", fontWeight: "bold", padding: "4pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4" }}>{t("invoiceDetail.supplier")}</td>
+              <td style={{ width: "32%", padding: "4pt 6pt", border: "0.5pt solid #ccc" }}>{invoice.supplier}</td>
+              <td style={{ width: "18%", fontWeight: "bold", padding: "4pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4" }}>{t("invoiceDetail.purchaseDate")}</td>
+              <td style={{ width: "32%", padding: "4pt 6pt", border: "0.5pt solid #ccc" }}>{formatDate(invoice.date)}</td>
+            </tr>
+            <tr>
+              <td style={{ fontWeight: "bold", padding: "4pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4" }}>{t("invoiceDetail.invoiceNumber")}</td>
+              <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc" }}>{invoice.invoiceNumber ?? "—"}</td>
+              <td style={{ fontWeight: "bold", padding: "4pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4" }}>{t("invoiceDetail.category")}</td>
+              <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc" }}>{invoice.category}</td>
+            </tr>
+            <tr>
+              <td style={{ fontWeight: "bold", padding: "4pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4" }}>{t("invoiceDetail.buyer")}</td>
+              <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc" }}>{invoice.buyer ?? "—"}</td>
+              <td style={{ fontWeight: "bold", padding: "4pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4" }}>{t("invoiceDetail.totalPurchase")}</td>
+              <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc", fontWeight: "bold", fontSize: "11pt" }}>{formatCurrency(invoice.totalAmount)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Description */}
+        {invoice.description && (
+          <div style={{ marginBottom: "12pt" }}>
+            <div style={{ fontWeight: "bold", fontSize: "10pt", marginBottom: "4pt", borderBottom: "0.5pt solid #ccc", paddingBottom: "3pt" }}>{t("invoiceDetail.description")}</div>
+            <div style={{ fontSize: "10pt", color: "#333" }}>{invoice.description}</div>
+          </div>
+        )}
+
+        {/* Items table */}
+        {invoice.items && invoice.items.length > 0 && (
+          <div className="items-section" style={{ marginBottom: "14pt" }}>
+            <div style={{ fontWeight: "bold", fontSize: "10pt", marginBottom: "6pt", borderBottom: "0.5pt solid #ccc", paddingBottom: "3pt" }}>{t("invoiceDetail.items")}</div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "9.5pt" }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: "5pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4", textAlign: "left" }}>{t("invoiceDetail.itemDescription")}</th>
+                  <th style={{ padding: "5pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4", textAlign: "right", width: "10%" }}>{t("invoiceDetail.itemQty")}</th>
+                  <th style={{ padding: "5pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4", textAlign: "left", width: "12%" }}>{t("invoiceDetail.itemUnit")}</th>
+                  <th style={{ padding: "5pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4", textAlign: "right", width: "18%" }}>{t("invoiceDetail.itemUnitPrice")}</th>
+                  <th style={{ padding: "5pt 6pt", border: "0.5pt solid #ccc", background: "#f4f4f4", textAlign: "right", width: "18%" }}>{t("invoiceDetail.itemTotal")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items.map((item, idx) => (
+                  <tr key={idx} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
+                    <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc" }}>{item.description}</td>
+                    <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc", textAlign: "right" }}>{item.quantity ?? "—"}</td>
+                    <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc" }}>{item.unit ?? "—"}</td>
+                    <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc", textAlign: "right" }}>{item.unitPrice != null ? formatCurrency(item.unitPrice) : "—"}</td>
+                    <td style={{ padding: "4pt 6pt", border: "0.5pt solid #ccc", textAlign: "right", fontWeight: "bold" }}>{item.totalPrice != null ? formatCurrency(item.totalPrice) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {invoice.totalAmount != null && (
+                <tfoot>
+                  <tr>
+                    <td colSpan={4} style={{ padding: "5pt 6pt", border: "0.5pt solid #ccc", textAlign: "right", fontWeight: "bold", background: "#f4f4f4" }}>{t("invoiceDetail.invoiceTotal")}</td>
+                    <td style={{ padding: "5pt 6pt", border: "0.5pt solid #ccc", textAlign: "right", fontWeight: "bold", background: "#f4f4f4" }}>{formatCurrency(invoice.totalAmount)}</td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        )}
+
+        {/* Notes */}
+        {invoice.notes && (
+          <div style={{ marginBottom: "14pt" }}>
+            <div style={{ fontWeight: "bold", fontSize: "10pt", marginBottom: "4pt", borderBottom: "0.5pt solid #ccc", paddingBottom: "3pt" }}>{t("invoiceDetail.notes")}</div>
+            <div style={{ fontSize: "10pt", color: "#333", whiteSpace: "pre-line" }}>{invoice.notes}</div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ borderTop: "0.5pt solid #ccc", paddingTop: "8pt", marginTop: "10pt", fontSize: "8pt", color: "#888", display: "flex", justifyContent: "space-between" }}>
+          <span>{t("invoiceDetail.printFooter")}</span>
+          <span>{t("invoiceDetail.registeredOn")}: {formatDate(invoice.createdAt)}</span>
+        </div>
+
+        {/* Invoice image — new page */}
+        {invoice.imageBase64 && (
+          <div className="image-section" style={{ paddingTop: "12pt" }}>
+            <div style={{ fontWeight: "bold", fontSize: "11pt", marginBottom: "10pt", borderBottom: "0.5pt solid #ccc", paddingBottom: "6pt" }}>{t("invoiceDetail.printOriginalInvoice")}</div>
+            <img
+              src={`data:image/jpeg;base64,${invoice.imageBase64}`}
+              alt={t("invoiceDetail.invoiceImage")}
+              style={{ maxWidth: "100%", maxHeight: "220mm", objectFit: "contain", display: "block", margin: "0 auto" }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

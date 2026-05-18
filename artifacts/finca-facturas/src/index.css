@@ -223,3 +223,74 @@
     display: none !important;
   }
 }
+
+@media print {
+  /* Hide all app chrome */
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Full-width main area */
+  body,
+  #root,
+  .min-h-screen {
+    display: block !important;
+  }
+
+  main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Hide regular page content, show only print layout */
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 18mm 15mm;
+    size: A4;
+  }
+
+  /* Print typography */
+  .print-invoice {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 11pt;
+    color: #111;
+    line-height: 1.5;
+  }
+
+  .print-invoice table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .print-invoice th,
+  .print-invoice td {
+    padding: 5pt 8pt;
+    border: 0.5pt solid #ccc;
+  }
+
+  .print-invoice th {
+    background: #f4f4f4;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  /* Avoid breaking items table across pages */
+  .print-invoice .items-section {
+    page-break-inside: avoid;
+  }
+
+  /* Image on new page */
+  .print-invoice .image-section {
+    page-break-before: always;
+  }
+}
