@@ -27,9 +27,9 @@ const BRAND_TEAL = "#4d8f9c";
 const EMPTY_COLOR = "#e5e7eb";
 
 function shortCurrency(v: number): string {
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M COP`;
-  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K COP`;
-  return `$${Math.round(v)} COP`;
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
+  return `$${Math.round(v)}`;
 }
 
 function BarTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
@@ -137,8 +137,8 @@ export function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: t("dashboard.totalInvoices"), value: String(totalInvoices), icon: FileText, iconBg: "bg-primary/10", iconColor: "text-primary", testId: "stat-total-invoices" },
-          { label: t("dashboard.totalSpend"), value: shortCurrency(totalAmount), valueTitle: formatCurrency(totalAmount), icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-600", testId: "stat-total-amount" },
-          { label: t("dashboard.avgInvoice"), value: shortCurrency(avgInvoice), valueTitle: formatCurrency(avgInvoice), icon: ShoppingBag, iconBg: "bg-amber-500/10", iconColor: "text-amber-600" },
+          { label: t("dashboard.totalSpend"), value: shortCurrency(totalAmount), valueTitle: formatCurrency(totalAmount), suffix: "COP", icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-600", testId: "stat-total-amount" },
+          { label: t("dashboard.avgInvoice"), value: shortCurrency(avgInvoice), valueTitle: formatCurrency(avgInvoice), suffix: "COP", icon: ShoppingBag, iconBg: "bg-amber-500/10", iconColor: "text-amber-600" },
           { label: t("dashboard.activeCategories"), value: String(activeCategories), icon: Layers, iconBg: "bg-violet-500/10", iconColor: "text-violet-600" },
         ].map((stat, i) => {
           const Icon = stat.icon;
@@ -154,10 +154,15 @@ export function Dashboard() {
                       {stat.label}
                     </p>
                     <p
-                      className="text-lg sm:text-xl font-bold text-foreground leading-tight break-all"
+                      className="text-lg sm:text-xl font-bold text-foreground leading-tight whitespace-nowrap"
                       title={stat.valueTitle}
                     >
                       {stat.value}
+                      {stat.suffix && (
+                        <span className="ml-1 text-[10px] font-medium text-muted-foreground align-middle">
+                          {stat.suffix}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
