@@ -229,13 +229,13 @@ export function Dashboard() {
             ) : (
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="relative flex-shrink-0">
-                  <PieChart width={168} height={168}>
+                  <PieChart width={140} height={140}>
                     <Pie
                       data={donutData}
-                      cx={80}
-                      cy={80}
-                      innerRadius={52}
-                      outerRadius={78}
+                      cx={66}
+                      cy={66}
+                      innerRadius={44}
+                      outerRadius={66}
                       paddingAngle={2}
                       dataKey="value"
                       strokeWidth={0}
@@ -248,26 +248,28 @@ export function Dashboard() {
                   </PieChart>
                   {totalAmount > 0 && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-xs text-muted-foreground">{t("dashboard.totalSpend")}</span>
+                      <span className="text-[10px] text-muted-foreground">{t("dashboard.totalSpend")}</span>
                       <span className="text-sm font-bold text-foreground leading-tight">{shortCurrency(totalAmount)}</span>
                     </div>
                   )}
                 </div>
-                <div className="flex-1 space-y-2 w-full" data-testid="list-by-category">
+                <div className="flex-1 min-w-0 space-y-2 w-full" data-testid="list-by-category">
                   {byCategory.map((cat) => {
                     const pct = totalAmount > 0 ? (cat.total / totalAmount) * 100 : 0;
                     const color = CATEGORIES[cat.category]?.color ?? "#888888";
                     return (
                       <div key={cat.category} data-testid={`row-category-${cat.category}`}>
-                        <div className="flex items-center justify-between mb-0.5">
-                          <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
                             <span className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
                             <span className="text-xs font-medium text-foreground truncate">{cat.category}</span>
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                            <span className="text-xs text-muted-foreground">{pct.toFixed(0)}%</span>
-                            <span className="text-xs font-semibold text-foreground w-20 text-right">{formatCurrency(cat.total)}</span>
-                          </div>
+                          <span
+                            className="text-xs font-semibold text-foreground flex-shrink-0 whitespace-nowrap"
+                            title={formatCurrency(cat.total)}
+                          >
+                            {shortCurrency(cat.total)}
+                          </span>
                         </div>
                         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                           <div
@@ -300,20 +302,27 @@ export function Dashboard() {
                   const pct = totalAmount > 0 ? (sup.total / totalAmount) * 100 : 0;
                   return (
                     <div key={sup.supplier} data-testid={`row-supplier-${sup.supplier}`}>
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           <span className="text-xs font-bold text-muted-foreground w-4 flex-shrink-0">
                             {idx + 1}
                           </span>
-                          <Link href={`/invoices?search=${encodeURIComponent(sup.supplier)}`}>
-                            <span className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer truncate block max-w-[160px]">
+                          <Link href={`/invoices?search=${encodeURIComponent(sup.supplier)}`} className="min-w-0 flex-1">
+                            <span className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer truncate block">
                               {sup.supplier}
                             </span>
                           </Link>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                          <span className="text-xs text-muted-foreground">{sup.count} {t("dashboard.invoiceCountUnit")}</span>
-                          <span className="text-sm font-semibold text-foreground">{formatCurrency(sup.total)}</span>
+                        <div className="flex flex-col items-end flex-shrink-0">
+                          <span
+                            className="text-sm font-semibold text-foreground whitespace-nowrap"
+                            title={formatCurrency(sup.total)}
+                          >
+                            {shortCurrency(sup.total)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                            {sup.count} {t("dashboard.invoiceCountUnit")}
+                          </span>
                         </div>
                       </div>
                       <div className="h-1 bg-muted rounded-full overflow-hidden ml-6">
