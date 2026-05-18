@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./appNotification";
 export * from "./categorySummary";
 export * from "./createInvoiceBody";
 export * from "./createInvoiceItemBody";
@@ -18,6 +19,7 @@ export * from "./invoice";
 export * from "./invoiceItem";
 export * from "./invoiceSummary";
 export * from "./listInvoicesParams";
+export * from "./listNotificationsParams";
 export * from "./supplierSummary";
 export * from "./updateInvoiceBody";
 export * from "./validateInvoiceBody";

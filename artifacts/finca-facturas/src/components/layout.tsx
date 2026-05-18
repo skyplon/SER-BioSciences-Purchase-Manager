@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useClerk, useUser } from "@clerk/react";
 import { useT } from "@/lib/i18n";
+import { NotificationBell } from "@/components/notification-bell";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -183,21 +184,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
             alt="SER BioSciences"
             className="h-7 w-auto object-contain"
           />
-          <button
-            onClick={() => signOut({ redirectUrl: `${basePath}/sign-in` })}
-            className="text-muted-foreground ml-auto"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+          <div className="ml-auto flex items-center gap-1">
+            <NotificationBell />
+            <button
+              onClick={() => signOut({ redirectUrl: `${basePath}/sign-in` })}
+              className="text-muted-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         {/* Desktop top bar */}
-        <header className="hidden md:flex items-center justify-end px-6 py-2 border-b border-border bg-card">
+        <header className="hidden md:flex items-center justify-end gap-2 px-6 py-2 border-b border-border bg-card">
           <img
             src={`${import.meta.env.BASE_URL}ser-biosciences-logo.png`}
             alt="SER BioSciences"
-            className="h-10 w-auto object-contain"
+            className="h-10 w-auto object-contain mr-auto"
           />
+          <NotificationBell />
         </header>
 
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>

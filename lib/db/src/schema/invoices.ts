@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, numeric, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, numeric, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -46,3 +46,14 @@ export const insertInvoiceItemSchema = createInsertSchema(invoiceItemsTable).omi
 
 export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
 export type InvoiceItem = typeof invoiceItemsTable.$inferSelect;
+
+export const notificationsTable = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(),
+  invoiceId: integer("invoice_id"),
+  invoiceSupplier: text("invoice_supplier").notNull(),
+  actorName: text("actor_name"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Notification = typeof notificationsTable.$inferSelect;

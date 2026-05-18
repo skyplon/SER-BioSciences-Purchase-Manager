@@ -167,6 +167,17 @@ export interface ExtractedInvoiceData {
   items: ExtractedInvoiceItem[];
 }
 
+export interface AppNotification {
+  id: number;
+  type: string;
+  /** @nullable */
+  invoiceId?: number | null;
+  invoiceSupplier: string;
+  /** @nullable */
+  actorName?: string | null;
+  createdAt: string;
+}
+
 export interface ValidateInvoiceBody {
   /** @nullable */
   invoiceNumber?: string | null;
@@ -192,4 +203,8 @@ export type ListInvoicesParams = {
   supplier?: string;
   startDate?: string;
   endDate?: string;
+};
+
+export type ListNotificationsParams = {
+  limit?: number;
 };

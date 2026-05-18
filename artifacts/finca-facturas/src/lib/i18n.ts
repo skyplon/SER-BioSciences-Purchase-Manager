@@ -190,6 +190,13 @@ const translations = {
     "settings.accountingPeriod": "Cierre contable",
     "settings.accountingPeriodDesc": "Define el mes de inicio del año fiscal",
 
+    "notifications.title": "Notificaciones",
+    "notifications.empty": "Sin notificaciones recientes",
+    "notifications.created": "Factura creada",
+    "notifications.updated": "Factura modificada",
+    "notifications.deleted": "Factura eliminada",
+    "notifications.by": "por",
+
     "common.loading": "Cargando...",
     "common.cancel": "Cancelar",
     "common.save": "Guardar",
@@ -385,6 +392,13 @@ const translations = {
     "settings.monthlyBudgetDesc": "Set spending limits per category",
     "settings.accountingPeriod": "Accounting period",
     "settings.accountingPeriodDesc": "Set the start month of the fiscal year",
+
+    "notifications.title": "Notifications",
+    "notifications.empty": "No recent notifications",
+    "notifications.created": "Invoice created",
+    "notifications.updated": "Invoice updated",
+    "notifications.deleted": "Invoice deleted",
+    "notifications.by": "by",
 
     "common.loading": "Loading...",
     "common.cancel": "Cancel",

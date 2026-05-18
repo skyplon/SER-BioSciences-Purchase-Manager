@@ -2,6 +2,7 @@ import { Router, type IRouter, type Request, type Response, type NextFunction } 
 import { getAuth } from "@clerk/express";
 import healthRouter from "./health";
 import invoicesRouter from "./invoices";
+import notificationsRouter from "./notifications";
 import ocrRouter from "./ocr";
 
 const router: IRouter = Router();
@@ -18,6 +19,7 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
 router.use(healthRouter);
 router.use(requireAuth);
 router.use(invoicesRouter);
+router.use(notificationsRouter);
 router.use(ocrRouter);
 
 export default router;

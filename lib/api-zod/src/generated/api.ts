@@ -136,6 +136,25 @@ export const GetInvoiceSummaryResponse = zod.object({
 });
 
 /**
+ * @summary List recent notifications
+ */
+export const ListNotificationsQueryParams = zod.object({
+  limit: zod.coerce.number().optional(),
+});
+
+export const ListNotificationsResponseItem = zod.object({
+  id: zod.number(),
+  type: zod.string(),
+  invoiceId: zod.number().nullish(),
+  invoiceSupplier: zod.string(),
+  actorName: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListNotificationsResponse = zod.array(
+  ListNotificationsResponseItem,
+);
+
+/**
  * @summary Export invoices as Excel file
  */
 export const ExportInvoicesResponse = zod.object({

@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: invoices
     description: Invoice management operations
+  - name: notifications
+    description: Notification operations
   - name: ocr
     description: OCR and AI extraction operations
 paths:
@@ -90,6 +92,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InvoiceSummary"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List recent notifications
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppNotification"
 
   /invoices/export:
     get:
@@ -473,6 +495,27 @@ components:
             $ref: "#/components/schemas/ExtractedInvoiceItem"
       required:
         - items
+
+    AppNotification:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        invoiceId:
+          type: ["integer", "null"]
+        invoiceSupplier:
+          type: string
+        actorName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - invoiceSupplier
+        - createdAt
 
     ExtractedInvoiceItem:
       type: object

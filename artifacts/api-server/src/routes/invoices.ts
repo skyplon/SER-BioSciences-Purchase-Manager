@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
-import { db, invoicesTable, invoiceItemsTable } from "@workspace/db";
+import { db, invoicesTable, invoiceItemsTable, notificationsTable } from "@workspace/db";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -249,6 +249,13 @@ router.post("/invoices", async (req, res): Promise<void> => {
   const result = await getInvoiceWithItems(invoice.id);
   res.status(201).json(result);
 
+  db.insert(notificationsTable).values({
+    type: "created",
+    invoiceId: invoice.id,
+    invoiceSupplier: invoice.supplier,
+    actorName: invoiceData.createdBy ?? null,
+  }).catch(() => {});
+
   if (result) {
     syncInvoiceToNotion({
       id: result.id,
@@ -375,6 +382,13 @@ router.patch("/invoices/:id", async (req, res): Promise<void> => {
   }
 
   res.json(result);
+
+  db.insert(notificationsTable).values({
+    type: "updated",
+    invoiceId: params.data.id,
+    invoiceSupplier: result.supplier,
+    actorName: invoiceData.updatedBy ?? null,
+  }).catch(() => {});
 });
 
 router.delete("/invoices/:id", async (req, res): Promise<void> => {
@@ -395,6 +409,13 @@ router.delete("/invoices/:id", async (req, res): Promise<void> => {
   }
 
   res.sendStatus(204);
+
+  db.insert(notificationsTable).values({
+    type: "deleted",
+    invoiceId: null,
+    invoiceSupplier: deleted.supplier,
+    actorName: null,
+  }).catch(() => {});
 });
 
 router.get("/invoices/:id/items", async (req, res): Promise<void> => {
