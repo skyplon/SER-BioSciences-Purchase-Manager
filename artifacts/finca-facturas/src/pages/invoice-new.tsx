@@ -432,7 +432,14 @@ export function InvoiceNew() {
         })));
       }
       finishAi(true);
-      toast({ title: t("invoiceNew.completeOk") });
+      const buyerStillEmpty = !buyer;
+      toast({
+        title: buyerStillEmpty
+          ? t("invoiceNew.completeOkBuyerMissing")
+          : t("invoiceNew.completeOk"),
+        variant: buyerStillEmpty ? "default" : "default",
+        duration: buyerStillEmpty ? 6000 : 4000,
+      });
     } catch {
       toast({ title: t("invoiceNew.completeError"), variant: "destructive" });
       finishAi(false);
