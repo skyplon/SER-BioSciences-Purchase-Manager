@@ -264,7 +264,7 @@ components:
         createdAt:
           type: string
         updatedAt:
-          type: string
+          type: ["string", "null"]
         items:
           type: array
           items:
@@ -274,7 +274,6 @@ components:
         - supplier
         - category
         - createdAt
-        - updatedAt
         - items
 
     InvoiceItem:

@@ -39,7 +39,7 @@ export const ListInvoicesResponseItem = zod.object({
   createdBy: zod.string().nullish(),
   updatedBy: zod.string().nullish(),
   createdAt: zod.string(),
-  updatedAt: zod.string(),
+  updatedAt: zod.string().nullish(),
   items: zod.array(
     zod.object({
       id: zod.number(),
@@ -118,7 +118,7 @@ export const GetInvoiceSummaryResponse = zod.object({
       createdBy: zod.string().nullish(),
       updatedBy: zod.string().nullish(),
       createdAt: zod.string(),
-      updatedAt: zod.string(),
+      updatedAt: zod.string().nullish(),
       items: zod.array(
         zod.object({
           id: zod.number(),
@@ -164,7 +164,7 @@ export const GetInvoiceResponse = zod.object({
   createdBy: zod.string().nullish(),
   updatedBy: zod.string().nullish(),
   createdAt: zod.string(),
-  updatedAt: zod.string(),
+  updatedAt: zod.string().nullish(),
   items: zod.array(
     zod.object({
       id: zod.number(),
@@ -224,7 +224,7 @@ export const UpdateInvoiceResponse = zod.object({
   createdBy: zod.string().nullish(),
   updatedBy: zod.string().nullish(),
   createdAt: zod.string(),
-  updatedAt: zod.string(),
+  updatedAt: zod.string().nullish(),
   items: zod.array(
     zod.object({
       id: zod.number(),

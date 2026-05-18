@@ -180,7 +180,7 @@ export function InvoicesList() {
     else if (sortField === "category") { valA = a.category.toLowerCase(); valB = b.category.toLowerCase(); }
     else if (sortField === "totalAmount") { valA = a.totalAmount ?? 0; valB = b.totalAmount ?? 0; }
     else if (sortField === "createdAt") { valA = a.createdAt; valB = b.createdAt; }
-    else if (sortField === "updatedAt") { valA = a.updatedAt; valB = b.updatedAt; }
+    else if (sortField === "updatedAt") { valA = a.updatedAt ?? null; valB = b.updatedAt ?? null; }
     if (valA === null || valB === null) return 0;
     if (valA < valB) return sortDir === "asc" ? -1 : 1;
     if (valA > valB) return sortDir === "asc" ? 1 : -1;

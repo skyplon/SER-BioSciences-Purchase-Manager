@@ -47,7 +47,8 @@ export interface Invoice {
   /** @nullable */
   updatedBy?: string | null;
   createdAt: string;
-  updatedAt: string;
+  /** @nullable */
+  updatedAt?: string | null;
   items: InvoiceItem[];
 }
 

@@ -17,7 +17,7 @@ export const invoicesTable = pgTable("invoices", {
   createdBy: text("created_by"),
   updatedBy: text("updated_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(() => new Date()),
 });
 
 export const insertInvoiceSchema = createInsertSchema(invoicesTable).omit({
