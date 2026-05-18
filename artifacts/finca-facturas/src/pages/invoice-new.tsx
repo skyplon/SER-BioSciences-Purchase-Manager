@@ -889,7 +889,9 @@ export function InvoiceNew() {
               return (
                 <div key={idx} className="border border-border rounded-lg p-3 space-y-2" data-testid={`row-item-${idx}`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">#{idx + 1}</span>
+                    {items.length > 1 && (
+                      <span className="text-xs font-medium text-muted-foreground">#{idx + 1}</span>
+                    )}
                     {items.length > 1 && (
                       <Button
                         variant="ghost"
