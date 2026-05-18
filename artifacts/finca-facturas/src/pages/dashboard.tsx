@@ -135,61 +135,36 @@ export function Dashboard() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card data-testid="stat-total-invoices" className="rounded-xl">
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
-                <FileText className="h-4 w-4 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground truncate">{t("dashboard.totalInvoices")}</p>
-                <p className="text-2xl font-bold text-foreground leading-tight">{totalInvoices}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card data-testid="stat-total-amount" className="rounded-xl">
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg flex-shrink-0">
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground truncate">{t("dashboard.totalSpend")}</p>
-                <p className="text-xl font-bold text-foreground leading-tight truncate">{formatCurrency(totalAmount)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-xl">
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg flex-shrink-0">
-                <ShoppingBag className="h-4 w-4 text-amber-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground truncate">{t("dashboard.avgInvoice")}</p>
-                <p className="text-xl font-bold text-foreground leading-tight truncate">{formatCurrency(avgInvoice)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-xl">
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-violet-500/10 rounded-lg flex-shrink-0">
-                <Layers className="h-4 w-4 text-violet-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground truncate">{t("dashboard.activeCategories")}</p>
-                <p className="text-2xl font-bold text-foreground leading-tight">{activeCategories}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { label: t("dashboard.totalInvoices"), value: String(totalInvoices), icon: FileText, iconBg: "bg-primary/10", iconColor: "text-primary", testId: "stat-total-invoices" },
+          { label: t("dashboard.totalSpend"), value: formatCurrency(totalAmount), valueTitle: formatCurrency(totalAmount), icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-600", testId: "stat-total-amount" },
+          { label: t("dashboard.avgInvoice"), value: formatCurrency(avgInvoice), valueTitle: formatCurrency(avgInvoice), icon: ShoppingBag, iconBg: "bg-amber-500/10", iconColor: "text-amber-600" },
+          { label: t("dashboard.activeCategories"), value: String(activeCategories), icon: Layers, iconBg: "bg-violet-500/10", iconColor: "text-violet-600" },
+        ].map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={i} data-testid={stat.testId} className="rounded-xl">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 ${stat.iconBg} rounded-lg flex-shrink-0`}>
+                    <Icon className={`h-4 w-4 ${stat.iconColor}`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground leading-tight mb-1">
+                      {stat.label}
+                    </p>
+                    <p
+                      className="text-lg sm:text-xl font-bold text-foreground leading-tight break-all"
+                      title={stat.valueTitle}
+                    >
+                      {stat.value}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Monthly Bar Chart */}
