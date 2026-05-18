@@ -137,8 +137,8 @@ export function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: t("dashboard.totalInvoices"), value: String(totalInvoices), icon: FileText, iconBg: "bg-primary/10", iconColor: "text-primary", testId: "stat-total-invoices" },
-          { label: t("dashboard.totalSpend"), value: formatCurrency(totalAmount), valueTitle: formatCurrency(totalAmount), icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-600", testId: "stat-total-amount" },
-          { label: t("dashboard.avgInvoice"), value: formatCurrency(avgInvoice), valueTitle: formatCurrency(avgInvoice), icon: ShoppingBag, iconBg: "bg-amber-500/10", iconColor: "text-amber-600" },
+          { label: t("dashboard.totalSpend"), value: shortCurrency(totalAmount), valueTitle: formatCurrency(totalAmount), icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-600", testId: "stat-total-amount" },
+          { label: t("dashboard.avgInvoice"), value: shortCurrency(avgInvoice), valueTitle: formatCurrency(avgInvoice), icon: ShoppingBag, iconBg: "bg-amber-500/10", iconColor: "text-amber-600" },
           { label: t("dashboard.activeCategories"), value: String(activeCategories), icon: Layers, iconBg: "bg-violet-500/10", iconColor: "text-violet-600" },
         ].map((stat, i) => {
           const Icon = stat.icon;
