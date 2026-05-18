@@ -42,12 +42,16 @@ function BarTooltip({ active, payload, label }: { active?: boolean; payload?: { 
   );
 }
 
-function DonutTooltip({ active, payload }: { active?: boolean; payload?: { name: string; value: number }[] }) {
+function DonutTooltip({ active, payload }: { active?: boolean; payload?: { name: string; value: number; payload?: { color?: string } }[] }) {
   if (!active || !payload?.length) return null;
+  const color = payload[0].payload?.color ?? "#4d8f9c";
   return (
-    <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-md text-sm">
-      <p className="font-medium text-foreground mb-0.5">{payload[0].name}</p>
-      <p className="text-primary font-bold">{formatCurrency(payload[0].value)}</p>
+    <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-lg text-sm whitespace-nowrap">
+      <div className="flex items-center gap-1.5 mb-0.5">
+        <span className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
+        <p className="font-medium text-foreground">{payload[0].name}</p>
+      </div>
+      <p className="font-bold" style={{ color }}>{formatCurrency(payload[0].value)}</p>
     </div>
   );
 }
