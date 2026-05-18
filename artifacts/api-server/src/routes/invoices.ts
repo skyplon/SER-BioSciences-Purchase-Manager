@@ -152,6 +152,8 @@ router.get("/invoices/export", async (req, res): Promise<void> => {
     { header: en ? "Buyer" : "Comprador", key: "buyer", width: 20 },
     { header: en ? "Created By" : "Creado Por", key: "createdBy", width: 20 },
     { header: en ? "Registration Date" : "Fecha Registro", key: "createdAt", width: 20 },
+    { header: en ? "Last Modified" : "Fecha Modificación", key: "updatedAt", width: 20 },
+    { header: en ? "Modified By" : "Modificado Por", key: "updatedBy", width: 20 },
   ];
 
   invoiceSheet.getRow(1).font = { bold: true };
@@ -169,6 +171,8 @@ router.get("/invoices/export", async (req, res): Promise<void> => {
       buyer: inv.buyer ?? "",
       createdBy: inv.createdBy ?? "",
       createdAt: inv.createdAt.toISOString().split("T")[0],
+      updatedAt: inv.updatedAt ? inv.updatedAt.toISOString().split("T")[0] : "",
+      updatedBy: inv.updatedBy ?? "",
     });
   }
 
