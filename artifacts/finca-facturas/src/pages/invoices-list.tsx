@@ -48,7 +48,7 @@ type SortDir = "asc" | "desc";
 
 const ALL_COLUMNS: ColKey[] = [
   "date", "supplier", "invoiceNumber", "category", "totalAmount",
-  "createdAt", "updatedAt", "createdBy", "updatedBy",
+  "createdAt", "createdBy", "updatedAt", "updatedBy",
 ];
 
 const COLS_STORAGE_KEY = "invoice-list-cols";
