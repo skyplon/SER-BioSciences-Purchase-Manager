@@ -79,7 +79,10 @@ export function InvoicesList() {
   const { language } = useSettings();
   const [isExporting, setIsExporting] = useState(false);
   const [category, setCategory] = useState<string>("");
-  const [searchSupplier, setSearchSupplier] = useState<string>("");
+  const [search, setSearch] = useState<string>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("search") ?? params.get("supplier") ?? "";
+  });
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -125,8 +128,8 @@ export function InvoicesList() {
   };
 
   const params: Record<string, string> = {};
+  if (search) params.search = search;
   if (category && category !== "all") params.category = category;
-  if (searchSupplier) params.supplier = searchSupplier;
   if (startDate) params.startDate = startDate;
   if (endDate) params.endDate = endDate;
 
@@ -243,13 +246,13 @@ export function InvoicesList() {
   };
 
   const clearFilters = () => {
+    setSearch("");
     setCategory("");
-    setSearchSupplier("");
     setStartDate("");
     setEndDate("");
   };
 
-  const hasFilters = category || searchSupplier || startDate || endDate;
+  const hasFilters = search || category || startDate || endDate;
 
   const renderCell = (inv: Invoice, col: ColKey) => {
     switch (col) {
@@ -333,15 +336,24 @@ export function InvoicesList() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={t("invoices.searchSupplier")}
-            value={searchSupplier}
-            onChange={(e) => setSearchSupplier(e.target.value)}
+            placeholder={t("invoices.search")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
-            data-testid="input-search-supplier"
+            data-testid="input-search-global"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
         <Select value={category || "all"} onValueChange={(v) => setCategory(v === "all" ? "" : v)}>
           <SelectTrigger className="w-44" data-testid="select-category-filter">

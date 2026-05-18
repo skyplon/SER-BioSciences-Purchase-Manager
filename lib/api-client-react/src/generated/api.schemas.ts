@@ -210,6 +210,10 @@ export interface ValidateInvoiceBody {
 }
 
 export type ListInvoicesParams = {
+  /**
+   * Global search across supplier, invoice number, description, notes and items
+   */
+  search?: string;
   category?: string;
   supplier?: string;
   startDate?: string;

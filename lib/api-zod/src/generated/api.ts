@@ -19,6 +19,12 @@ export const HealthCheckResponse = zod.object({
  * @summary List all invoices
  */
 export const ListInvoicesQueryParams = zod.object({
+  search: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "Global search across supplier, invoice number, description, notes and items",
+    ),
   category: zod.coerce.string().optional(),
   supplier: zod.coerce.string().optional(),
   startDate: zod.coerce.string().optional(),

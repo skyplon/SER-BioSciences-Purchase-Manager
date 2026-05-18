@@ -37,6 +37,11 @@ paths:
       tags: [invoices]
       summary: List all invoices
       parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Global search across supplier, invoice number, description, notes and items
         - name: category
           in: query
           schema:

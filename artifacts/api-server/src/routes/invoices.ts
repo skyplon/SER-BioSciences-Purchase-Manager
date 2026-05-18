@@ -41,9 +41,23 @@ async function getInvoiceWithItems(id: number) {
 
 router.get("/invoices", async (req, res): Promise<void> => {
   const parsed = ListInvoicesQueryParams.safeParse(req.query);
-  const { category, supplier, startDate, endDate } = parsed.success ? parsed.data : {};
+  const { search, category, supplier, startDate, endDate } = parsed.success ? parsed.data : {};
 
   const conditions = [];
+  if (search) {
+    const q = '%' + search.toLowerCase() + '%';
+    conditions.push(sql`(
+      LOWER(${invoicesTable.supplier}) LIKE ${q}
+      OR LOWER(COALESCE(${invoicesTable.invoiceNumber}, '')) LIKE ${q}
+      OR LOWER(COALESCE(${invoicesTable.description}, '')) LIKE ${q}
+      OR LOWER(COALESCE(${invoicesTable.notes}, '')) LIKE ${q}
+      OR EXISTS (
+        SELECT 1 FROM ${invoiceItemsTable}
+        WHERE ${invoiceItemsTable.invoiceId} = ${invoicesTable.id}
+        AND LOWER(COALESCE(${invoiceItemsTable.description}, '')) LIKE ${q}
+      )
+    )`);
+  }
   if (category) conditions.push(eq(invoicesTable.category, category));
   if (supplier) conditions.push(sql`LOWER(${invoicesTable.supplier}) LIKE ${'%' + supplier.toLowerCase() + '%'}`);
   if (startDate) conditions.push(gte(invoicesTable.date, startDate));

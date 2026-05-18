@@ -160,7 +160,7 @@ function SupplierRow({
   t: (key: string) => string;
 }) {
   const [, setLocation] = useLocation();
-  const href = `/invoices?supplier=${encodeURIComponent(supplier.supplier)}`;
+  const href = `/invoices?search=${encodeURIComponent(supplier.supplier)}`;
 
   return (
     <tr
