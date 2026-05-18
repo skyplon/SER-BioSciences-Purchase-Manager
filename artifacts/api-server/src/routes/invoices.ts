@@ -117,6 +117,22 @@ router.get("/invoices/summary", async (_req, res): Promise<void> => {
     .sort((a, b) => b.total - a.total)
     .slice(0, 10);
 
+  // Build last-12-months series (filled, including months with 0 spend)
+  const monthMap: Record<string, { total: number; count: number }> = {};
+  for (const inv of invoices) {
+    if (!inv.date) continue;
+    const m = inv.date.slice(0, 7); // "YYYY-MM"
+    if (!monthMap[m]) monthMap[m] = { total: 0, count: 0 };
+    monthMap[m].total += inv.totalAmount ? parseFloat(inv.totalAmount) : 0;
+    monthMap[m].count++;
+  }
+  const now = new Date();
+  const byMonth = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    return { month: m, ...(monthMap[m] ?? { total: 0, count: 0 }) };
+  });
+
   const recentInvoices = invoices.slice(0, 5);
   const recentWithItems = await Promise.all(
     recentInvoices.map(async (inv) => {
@@ -139,6 +155,7 @@ router.get("/invoices/summary", async (_req, res): Promise<void> => {
     totalAmount,
     byCategory,
     bySupplier,
+    byMonth,
     recentInvoices: recentWithItems,
   });
 });

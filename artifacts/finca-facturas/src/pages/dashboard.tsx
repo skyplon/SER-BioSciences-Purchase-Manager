@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useGetInvoiceSummary, getGetInvoiceSummaryQueryKey } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -5,40 +6,120 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, FileText, TrendingUp, ShoppingBag } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, ShoppingBag, Layers } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { useT } from "@/lib/i18n";
+import { useSettings } from "@/contexts/settings-context";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+
+const BRAND_TEAL = "#4d8f9c";
+const EMPTY_COLOR = "#e5e7eb";
+
+function shortCurrency(v: number): string {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
+  return `$${Math.round(v)}`;
+}
+
+function BarTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-md text-sm">
+      <p className="font-medium text-foreground mb-0.5">{label}</p>
+      <p className="text-primary font-bold">{formatCurrency(payload[0].value)}</p>
+    </div>
+  );
+}
+
+function DonutTooltip({ active, payload }: { active?: boolean; payload?: { name: string; value: number }[] }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-md text-sm">
+      <p className="font-medium text-foreground mb-0.5">{payload[0].name}</p>
+      <p className="text-primary font-bold">{formatCurrency(payload[0].value)}</p>
+    </div>
+  );
+}
 
 export function Dashboard() {
   const t = useT();
+  const { language } = useSettings();
+  const locale = language === "es" ? "es-CO" : "en-US";
+
   const { data: summary, isLoading } = useGetInvoiceSummary({
     query: { queryKey: getGetInvoiceSummaryQueryKey() },
   });
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-9 w-36" />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-        </div>
-        <Skeleton className="h-64" />
-      </div>
-    );
-  }
 
   const totalInvoices = summary?.totalInvoices ?? 0;
   const totalAmount = summary?.totalAmount ?? 0;
   const byCategory = summary?.byCategory ?? [];
   const bySupplier = summary?.bySupplier ?? [];
+  const byMonth = summary?.byMonth ?? [];
   const recentInvoices = summary?.recentInvoices ?? [];
+
+  const avgInvoice = totalInvoices > 0 ? totalAmount / totalInvoices : 0;
+  const activeCategories = byCategory.length;
+
+  const monthChartData = useMemo(() =>
+    byMonth.map((m) => ({
+      label: new Date(m.month + "-15").toLocaleString(locale, { month: "short" }),
+      total: m.total,
+      count: m.count,
+    })),
+    [byMonth, locale]
+  );
+
+  const hasMonthlyData = byMonth.some((m) => m.total > 0);
+
+  const donutData = useMemo(() =>
+    byCategory.length > 0
+      ? byCategory.map((c) => ({
+          name: c.category,
+          value: c.total,
+          color: CATEGORIES[c.category]?.color ?? "#888888",
+        }))
+      : [{ name: "—", value: 1, color: EMPTY_COLOR }],
+    [byCategory]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1.5">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-36" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-56 rounded-xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+        <Skeleton className="h-48 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h2>
@@ -52,89 +133,225 @@ export function Dashboard() {
         </Link>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card data-testid="stat-total-invoices">
-          <CardContent className="pt-6">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card data-testid="stat-total-invoices" className="rounded-xl">
+          <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-md">
-                <FileText className="h-5 w-5 text-primary" />
+              <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                <FileText className="h-4 w-4 text-primary" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("dashboard.totalInvoices")}</p>
-                <p className="text-2xl font-bold text-foreground">{totalInvoices}</p>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">{t("dashboard.totalInvoices")}</p>
+                <p className="text-2xl font-bold text-foreground leading-tight">{totalInvoices}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card data-testid="stat-total-amount">
-          <CardContent className="pt-6">
+
+        <Card data-testid="stat-total-amount" className="rounded-xl">
+          <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-md">
-                <TrendingUp className="h-5 w-5 text-primary" />
+              <div className="p-2 bg-emerald-500/10 rounded-lg flex-shrink-0">
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("dashboard.totalSpend")}</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(totalAmount)}</p>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">{t("dashboard.totalSpend")}</p>
+                <p className="text-xl font-bold text-foreground leading-tight truncate">{formatCurrency(totalAmount)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-xl">
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-500/10 rounded-lg flex-shrink-0">
+                <ShoppingBag className="h-4 w-4 text-amber-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">{t("dashboard.avgInvoice")}</p>
+                <p className="text-xl font-bold text-foreground leading-tight truncate">{formatCurrency(avgInvoice)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-xl">
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-violet-500/10 rounded-lg flex-shrink-0">
+                <Layers className="h-4 w-4 text-violet-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">{t("dashboard.activeCategories")}</p>
+                <p className="text-2xl font-bold text-foreground leading-tight">{activeCategories}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Monthly Bar Chart */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-base">{t("dashboard.monthlySpend")}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.monthlySpendSubtitle")}</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!hasMonthlyData ? (
+            <div className="flex items-center justify-center h-44 text-sm text-muted-foreground">
+              {t("dashboard.noData")}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={monthChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tickFormatter={shortCurrency}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={54}
+                />
+                <RechartsTooltip content={<BarTooltip />} cursor={{ fill: "hsl(var(--muted))", radius: 4 }} />
+                <Bar dataKey="total" fill={BRAND_TEAL} radius={[4, 4, 0, 0]} maxBarSize={48} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Donut + Top Suppliers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* By Category */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4" />
-              {t("dashboard.byCategory")}
-            </CardTitle>
+
+        {/* Donut chart */}
+        <Card className="rounded-xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">{t("dashboard.byCategory")}</CardTitle>
+            <p className="text-xs text-muted-foreground">{t("dashboard.byCategorySubtitle")}</p>
           </CardHeader>
           <CardContent>
             {byCategory.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">{t("dashboard.noData")}</p>
+              <div className="flex items-center justify-center h-44 text-sm text-muted-foreground">
+                {t("dashboard.noData")}
+              </div>
             ) : (
-              <div className="space-y-3" data-testid="list-by-category">
-                {byCategory.map((cat) => (
-                  <div key={cat.category} className="flex items-center justify-between" data-testid={`row-category-${cat.category}`}>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className="text-xs"
-                        style={{ backgroundColor: CATEGORIES[cat.category]?.color ?? "#888", color: "#fff" }}
-                      >
-                        {cat.category}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{cat.count} {t("dashboard.invoiceCountUnit")}</span>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative flex-shrink-0">
+                  <PieChart width={168} height={168}>
+                    <Pie
+                      data={donutData}
+                      cx={80}
+                      cy={80}
+                      innerRadius={52}
+                      outerRadius={78}
+                      paddingAngle={2}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {donutData.map((entry, index) => (
+                        <Cell key={index} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip content={<DonutTooltip />} />
+                  </PieChart>
+                  {totalAmount > 0 && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-xs text-muted-foreground">{t("dashboard.totalSpend")}</span>
+                      <span className="text-sm font-bold text-foreground leading-tight">{shortCurrency(totalAmount)}</span>
                     </div>
-                    <span className="text-sm font-medium">{formatCurrency(cat.total)}</span>
-                  </div>
-                ))}
+                  )}
+                </div>
+                <div className="flex-1 space-y-2 w-full" data-testid="list-by-category">
+                  {byCategory.map((cat) => {
+                    const pct = totalAmount > 0 ? (cat.total / totalAmount) * 100 : 0;
+                    const color = CATEGORIES[cat.category]?.color ?? "#888888";
+                    return (
+                      <div key={cat.category} data-testid={`row-category-${cat.category}`}>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
+                            <span className="text-xs font-medium text-foreground truncate">{cat.category}</span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                            <span className="text-xs text-muted-foreground">{pct.toFixed(0)}%</span>
+                            <span className="text-xs font-semibold text-foreground w-20 text-right">{formatCurrency(cat.total)}</span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%`, backgroundColor: color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Top Suppliers */}
-        <Card>
-          <CardHeader>
+        <Card className="rounded-xl">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base">{t("dashboard.bySupplier")}</CardTitle>
           </CardHeader>
           <CardContent>
             {bySupplier.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">{t("dashboard.noData")}</p>
+              <div className="flex items-center justify-center h-44 text-sm text-muted-foreground">
+                {t("dashboard.noData")}
+              </div>
             ) : (
               <div className="space-y-3" data-testid="list-by-supplier">
-                {bySupplier.slice(0, 5).map((sup) => (
-                  <div key={sup.supplier} className="flex items-center justify-between" data-testid={`row-supplier-${sup.supplier}`}>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{sup.supplier}</p>
-                      <p className="text-xs text-muted-foreground">{sup.count} {t("dashboard.invoiceCountUnit")}</p>
+                {bySupplier.slice(0, 6).map((sup, idx) => {
+                  const pct = totalAmount > 0 ? (sup.total / totalAmount) * 100 : 0;
+                  return (
+                    <div key={sup.supplier} data-testid={`row-supplier-${sup.supplier}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-xs font-bold text-muted-foreground w-4 flex-shrink-0">
+                            {idx + 1}
+                          </span>
+                          <Link href={`/invoices?search=${encodeURIComponent(sup.supplier)}`}>
+                            <span className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer truncate block max-w-[160px]">
+                              {sup.supplier}
+                            </span>
+                          </Link>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                          <span className="text-xs text-muted-foreground">{sup.count} {t("dashboard.invoiceCountUnit")}</span>
+                          <span className="text-sm font-semibold text-foreground">{formatCurrency(sup.total)}</span>
+                        </div>
+                      </div>
+                      <div className="h-1 bg-muted rounded-full overflow-hidden ml-6">
+                        <div
+                          className="h-full rounded-full bg-primary/60 transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
                     </div>
-                    <span className="text-sm font-medium">{formatCurrency(sup.total)}</span>
-                  </div>
-                ))}
+                  );
+                })}
+                {bySupplier.length > 6 && (
+                  <Link href="/suppliers">
+                    <Button variant="ghost" size="sm" className="w-full text-xs mt-1">
+                      {t("dashboard.viewAll")} ({bySupplier.length})
+                    </Button>
+                  </Link>
+                )}
               </div>
             )}
           </CardContent>
@@ -142,11 +359,13 @@ export function Dashboard() {
       </div>
 
       {/* Recent Invoices */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+      <Card className="rounded-xl">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base">{t("dashboard.recent")}</CardTitle>
           <Link href="/invoices">
-            <Button variant="ghost" size="sm" data-testid="link-view-all-invoices">{t("dashboard.viewAll")}</Button>
+            <Button variant="ghost" size="sm" data-testid="link-view-all-invoices">
+              {t("dashboard.viewAll")}
+            </Button>
           </Link>
         </CardHeader>
         <CardContent>
@@ -162,30 +381,47 @@ export function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-2" data-testid="list-recent-invoices">
-              {recentInvoices.map((inv) => (
-                <Link key={inv.id} href={`/invoices/${inv.id}`}>
-                  <div
-                    className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors cursor-pointer"
-                    data-testid={`card-invoice-${inv.id}`}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">{inv.supplier}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(inv.date)} · {inv.category}</p>
+            <div className="space-y-1" data-testid="list-recent-invoices">
+              {recentInvoices.map((inv) => {
+                const catColor = CATEGORIES[inv.category]?.color ?? "#888888";
+                return (
+                  <Link key={inv.id} href={`/invoices/${inv.id}`}>
+                    <div
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 transition-colors cursor-pointer"
+                      data-testid={`card-invoice-${inv.id}`}
+                    >
+                      <div
+                        className="h-8 w-1 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: catColor }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">{inv.supplier}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(inv.date)}
+                          <span className="mx-1">·</span>
+                          <Badge
+                            className="text-[10px] px-1.5 py-0 h-4 font-normal border-0 text-white"
+                            style={{ backgroundColor: catColor + "cc" }}
+                          >
+                            {inv.category}
+                          </Badge>
+                        </p>
+                      </div>
+                      <div className="ml-2 text-right flex-shrink-0">
+                        <p className="text-sm font-semibold text-foreground">{formatCurrency(inv.totalAmount)}</p>
+                        {inv.invoiceNumber && (
+                          <p className="text-xs text-muted-foreground">#{inv.invoiceNumber}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="ml-4 text-right">
-                      <p className="text-sm font-semibold text-foreground">{formatCurrency(inv.totalAmount)}</p>
-                      {inv.invoiceNumber && (
-                        <p className="text-xs text-muted-foreground">#{inv.invoiceNumber}</p>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
     </div>
   );
 }

@@ -434,6 +434,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SupplierSummary"
+        byMonth:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthSummary"
         recentInvoices:
           type: array
           items:
@@ -443,7 +447,23 @@ components:
         - totalAmount
         - byCategory
         - bySupplier
+        - byMonth
         - recentInvoices
+
+    MonthSummary:
+      type: object
+      properties:
+        month:
+          type: string
+          description: "YYYY-MM"
+        total:
+          type: number
+        count:
+          type: integer
+      required:
+        - month
+        - total
+        - count
 
     CategorySummary:
       type: object

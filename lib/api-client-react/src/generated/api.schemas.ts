@@ -119,11 +119,19 @@ export interface SupplierSummary {
   total: number;
 }
 
+export interface MonthSummary {
+  /** YYYY-MM */
+  month: string;
+  total: number;
+  count: number;
+}
+
 export interface InvoiceSummary {
   totalInvoices: number;
   totalAmount: number;
   byCategory: CategorySummary[];
   bySupplier: SupplierSummary[];
+  byMonth: MonthSummary[];
   recentInvoices: Invoice[];
 }
 

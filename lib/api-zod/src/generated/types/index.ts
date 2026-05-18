@@ -20,6 +20,7 @@ export * from "./invoiceItem";
 export * from "./invoiceSummary";
 export * from "./listInvoicesParams";
 export * from "./listNotificationsParams";
+export * from "./monthSummary";
 export * from "./supplierStats";
 export * from "./supplierSummary";
 export * from "./updateInvoiceBody";

@@ -122,6 +122,13 @@ export const GetInvoiceSummaryResponse = zod.object({
       total: zod.number(),
     }),
   ),
+  byMonth: zod.array(
+    zod.object({
+      month: zod.string().describe("YYYY-MM"),
+      total: zod.number(),
+      count: zod.number(),
+    }),
+  ),
   recentInvoices: zod.array(
     zod.object({
       id: zod.number(),

@@ -7,6 +7,7 @@
  */
 import type { CategorySummary } from "./categorySummary";
 import type { Invoice } from "./invoice";
+import type { MonthSummary } from "./monthSummary";
 import type { SupplierSummary } from "./supplierSummary";
 
 export interface InvoiceSummary {
@@ -14,5 +15,6 @@ export interface InvoiceSummary {
   totalAmount: number;
   byCategory: CategorySummary[];
   bySupplier: SupplierSummary[];
+  byMonth: MonthSummary[];
   recentInvoices: Invoice[];
 }
