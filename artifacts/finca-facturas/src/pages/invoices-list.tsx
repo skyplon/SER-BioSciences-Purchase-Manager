@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@clerk/react";
 import {
   useListInvoices,
   getListInvoicesQueryKey,
@@ -74,6 +75,7 @@ export function InvoicesList() {
   const t = useT();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { getToken } = useAuth();
   const { language } = useSettings();
   const [isExporting, setIsExporting] = useState(false);
   const [category, setCategory] = useState<string>("");
@@ -145,7 +147,10 @@ export function InvoicesList() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const res = await fetch(`/api/invoices/export?lang=${language}`);
+      const token = await getToken();
+      const res = await fetch(`/api/invoices/export?lang=${language}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Export failed");
       const { fileBase64, filename } = await res.json();
       const blob = new Blob([Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0))], {
@@ -158,7 +163,7 @@ export function InvoicesList() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      toast({ title: t("invoices.errorDeleting"), variant: "destructive" });
+      toast({ title: t("invoices.exportError"), variant: "destructive" });
     } finally {
       setIsExporting(false);
     }

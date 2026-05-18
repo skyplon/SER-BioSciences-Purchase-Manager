@@ -65,6 +65,7 @@ const translations = {
     "invoices.deleteConfirm": "¿Eliminar factura?",
     "invoices.deleteConfirmDesc": "Esta acción no se puede deshacer.",
     "invoices.deleteSuccess": "Factura eliminada",
+    "invoices.exportError": "Error al exportar el archivo",
 
     "invoiceNew.title": "Nueva Factura",
     "invoiceNew.subtitle": "Captura o carga un archivo de la factura",
@@ -260,6 +261,7 @@ const translations = {
     "invoices.deleteConfirm": "Delete invoice?",
     "invoices.deleteConfirmDesc": "This action cannot be undone.",
     "invoices.deleteSuccess": "Invoice deleted",
+    "invoices.exportError": "Error exporting the file",
 
     "invoiceNew.title": "New Invoice",
     "invoiceNew.subtitle": "Capture or upload a photo of the invoice",
