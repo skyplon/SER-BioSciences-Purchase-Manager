@@ -146,6 +146,9 @@ const translations = {
     "invoiceDetail.deleteTitle": "Eliminar factura",
     "invoiceDetail.deleteDesc": "Esta acción no se puede deshacer. La factura será eliminada permanentemente.",
     "invoiceDetail.errorDeleting": "Error al eliminar",
+    "invoiceDetail.saveSuccess": "Factura actualizada",
+    "invoiceDetail.errorSaving": "Error al guardar",
+    "invoiceDetail.category": "Categoría",
 
     "settings.title": "Configuración",
     "settings.subtitle": "Personaliza la aplicación según tus preferencias",
@@ -331,6 +334,9 @@ const translations = {
     "invoiceDetail.deleteTitle": "Delete invoice",
     "invoiceDetail.deleteDesc": "This action cannot be undone. The invoice will be permanently deleted.",
     "invoiceDetail.errorDeleting": "Error deleting",
+    "invoiceDetail.saveSuccess": "Invoice updated",
+    "invoiceDetail.errorSaving": "Error saving",
+    "invoiceDetail.category": "Category",
 
     "settings.title": "Settings",
     "settings.subtitle": "Customize the application to your preferences",
