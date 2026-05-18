@@ -26,6 +26,7 @@ import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { BUYER_OPTIONS } from "@/lib/buyers";
 import { Link } from "wouter";
 import { useT } from "@/lib/i18n";
+import { AiProgressSteps } from "@/components/ai-progress-steps";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -77,6 +78,36 @@ export function InvoiceNew() {
   const [validating, setValidating] = useState(false);
   const [completing, setCompleting] = useState(false);
 
+  type AiMode = "extract" | "validate" | "complete";
+  const [aiStep, setAiStep] = useState(0);
+  const [aiMode, setAiMode] = useState<AiMode>("extract");
+  const [aiDone, setAiDone] = useState(false);
+  const [aiError, setAiError] = useState(false);
+  const stepTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearStepTimers = () => {
+    stepTimersRef.current.forEach(clearTimeout);
+    stepTimersRef.current = [];
+  };
+
+  const scheduleAiStep = (step: number, delay: number) => {
+    const id = setTimeout(() => setAiStep(step), delay);
+    stepTimersRef.current.push(id);
+  };
+
+  const finishAi = (success: boolean) => {
+    clearStepTimers();
+    if (success) {
+      setAiDone(true);
+      const id = setTimeout(() => { setAiStep(0); setAiDone(false); }, 2500);
+      stepTimersRef.current.push(id);
+    } else {
+      setAiError(true);
+      const id = setTimeout(() => { setAiStep(0); setAiError(false); }, 3000);
+      stepTimersRef.current.push(id);
+    }
+  };
+
   const t = useT();
   const extractMutation = useExtractInvoiceData();
   const validateMutation = useValidateInvoiceData();
@@ -94,6 +125,11 @@ export function InvoiceNew() {
   });
 
   const handleImageFile = (file: File) => {
+    setAiMode("extract");
+    setAiDone(false);
+    setAiError(false);
+    clearStepTimers();
+    setAiStep(1);
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
@@ -107,6 +143,11 @@ export function InvoiceNew() {
   };
 
   const handlePdfFile = async (file: File) => {
+    setAiMode("extract");
+    setAiDone(false);
+    setAiError(false);
+    clearStepTimers();
+    setAiStep(1);
     try {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -125,6 +166,7 @@ export function InvoiceNew() {
       handleExtract(base64);
     } catch {
       toast({ title: t("invoiceNew.pdfError"), variant: "destructive" });
+      setAiStep(0);
     }
   };
 
@@ -139,12 +181,18 @@ export function InvoiceNew() {
   };
 
   const handleDocxFile = async (file: File) => {
+    setAiMode("extract");
+    setAiDone(false);
+    setAiError(false);
+    clearStepTimers();
+    setAiStep(1);
     try {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ arrayBuffer });
       const text = result.value.trim();
       if (!text) {
         toast({ title: t("invoiceNew.wordNoText"), variant: "destructive" });
+        setAiStep(0);
         return;
       }
       setDocxName(file.name);
@@ -152,6 +200,9 @@ export function InvoiceNew() {
       setImageBase64(null);
       setExtracting(true);
       setExtracted(false);
+      setAiStep(2);
+      scheduleAiStep(3, 2000);
+      scheduleAiStep(4, 5000);
       const token = await getToken();
       const response = await fetch("/api/ocr/extract-text", {
         method: "POST",
@@ -182,9 +233,11 @@ export function InvoiceNew() {
         })));
       }
       setExtracted(true);
+      finishAi(true);
       toast({ title: t("invoiceNew.wordExtracted") });
     } catch {
       toast({ title: t("invoiceNew.wordError"), variant: "destructive" });
+      finishAi(false);
     } finally {
       setExtracting(false);
     }
@@ -193,6 +246,9 @@ export function InvoiceNew() {
   const handleExtract = async (base64: string) => {
     setExtracting(true);
     setExtracted(false);
+    setAiStep(2);
+    scheduleAiStep(3, 2500);
+    scheduleAiStep(4, 6000);
     try {
       const data = await extractMutation.mutateAsync({ data: { imageBase64: base64 } });
       if (data.supplier) setSupplier(data.supplier);
@@ -215,15 +271,23 @@ export function InvoiceNew() {
         );
       }
       setExtracted(true);
+      finishAi(true);
       toast({ title: t("invoiceNew.extractedOk") });
     } catch {
       toast({ title: t("invoiceNew.extractError"), variant: "destructive" });
+      finishAi(false);
     } finally {
       setExtracting(false);
     }
   };
 
   const handleValidate = async () => {
+    setAiMode("validate");
+    setAiDone(false);
+    setAiError(false);
+    clearStepTimers();
+    setAiStep(1);
+    scheduleAiStep(2, 1800);
     setValidating(true);
     try {
       const data = await validateMutation.mutateAsync({
@@ -265,9 +329,11 @@ export function InvoiceNew() {
           }))
         );
       }
+      finishAi(true);
       toast({ title: t("invoiceNew.validateOk") });
     } catch {
       toast({ title: t("invoiceNew.validateError"), variant: "destructive" });
+      finishAi(false);
     } finally {
       setValidating(false);
     }
@@ -307,6 +373,12 @@ export function InvoiceNew() {
   };
 
   const handleComplete = async () => {
+    setAiMode("complete");
+    setAiDone(false);
+    setAiError(false);
+    clearStepTimers();
+    setAiStep(1);
+    scheduleAiStep(2, 1500);
     setCompleting(true);
     try {
       const { updated } = handleFillPrices();
@@ -352,9 +424,11 @@ export function InvoiceNew() {
           }))
         );
       }
+      finishAi(true);
       toast({ title: t("invoiceNew.completeOk") });
     } catch {
       toast({ title: t("invoiceNew.completeError"), variant: "destructive" });
+      finishAi(false);
     } finally {
       setCompleting(false);
     }
@@ -442,12 +516,7 @@ export function InvoiceNew() {
                   data-testid="img-invoice-preview"
                 />
                 {extracting && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded">
-                    <div className="text-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">{t("invoiceNew.extracting")}</p>
-                    </div>
-                  </div>
+                  <div className="absolute inset-0 bg-background/40 rounded" />
                 )}
               </div>
               {extracted && (
@@ -473,7 +542,6 @@ export function InvoiceNew() {
                   <p className="text-sm font-medium text-foreground truncate">{docxName}</p>
                   <p className="text-xs text-muted-foreground">{t("invoiceNew.wordDoc")}</p>
                 </div>
-                {extracting && <Loader2 className="h-4 w-4 animate-spin text-primary ml-auto" />}
               </div>
               {extracted && (
                 <div className="flex items-center gap-2 text-sm text-green-600">
@@ -539,12 +607,33 @@ export function InvoiceNew() {
         </CardContent>
       </Card>
 
+      {aiStep > 0 && aiMode === "extract" && (
+        <AiProgressSteps
+          title={t("aiSteps.extractTitle")}
+          steps={docxName ? [
+            t("aiSteps.step.readingText"),
+            t("aiSteps.step.sendingToAi"),
+            t("aiSteps.step.analyzingDoc"),
+            t("aiSteps.step.extractingFields"),
+          ] : [
+            t("aiSteps.step.readingDoc"),
+            t("aiSteps.step.sendingToAi"),
+            t("aiSteps.step.analyzingInvoice"),
+            t("aiSteps.step.extractingFields"),
+          ]}
+          currentStep={aiStep}
+          done={aiDone}
+          error={aiError}
+          doneLabel={t("aiSteps.doneExtract")}
+          errorLabel={t("aiSteps.error")}
+        />
+      )}
+
       {/* Invoice data form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-base">
             {t("invoiceNew.dataSection")}
-            {extracting && <Skeleton className="h-5 w-5 rounded-full" />}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -633,11 +722,6 @@ export function InvoiceNew() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="description">{t("invoiceNew.description")} *</Label>
-              {extracting && (
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" /> {t("invoiceNew.generatingDesc")}
-                </span>
-              )}
             </div>
             <Textarea
               id="description"
@@ -653,11 +737,6 @@ export function InvoiceNew() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="notes">{t("invoiceNew.notes")} *</Label>
-              {extracting && (
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" /> {t("invoiceNew.generatingDesc")}
-                </span>
-              )}
             </div>
             <Textarea
               id="notes"
@@ -878,6 +957,24 @@ export function InvoiceNew() {
           </Button>
         </CardContent>
       </Card>
+
+      {aiStep > 0 && aiMode !== "extract" && (
+        <AiProgressSteps
+          title={aiMode === "validate" ? t("aiSteps.validateTitle") : t("aiSteps.completeTitle")}
+          steps={aiMode === "validate" ? [
+            t("aiSteps.step.reviewingFields"),
+            t("aiSteps.step.fixingWithAi"),
+          ] : [
+            t("aiSteps.step.preparingData"),
+            t("aiSteps.step.completingWithAi"),
+          ]}
+          currentStep={aiStep}
+          done={aiDone}
+          error={aiError}
+          doneLabel={aiMode === "validate" ? t("aiSteps.doneValidate") : t("aiSteps.doneComplete")}
+          errorLabel={t("aiSteps.error")}
+        />
+      )}
 
       {/* Mobile: 2x2 grid; Desktop: row right-aligned */}
       <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-end sm:gap-3">
