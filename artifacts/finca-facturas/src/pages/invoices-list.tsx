@@ -3,9 +3,8 @@ import {
   useListInvoices,
   getListInvoicesQueryKey,
   useDeleteInvoice,
-  useExportInvoices,
-  getExportInvoicesQueryKey,
 } from "@workspace/api-client-react";
+import { useSettings } from "@/contexts/settings-context";
 import type { Invoice } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -75,6 +74,8 @@ export function InvoicesList() {
   const t = useT();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { language } = useSettings();
+  const [isExporting, setIsExporting] = useState(false);
   const [category, setCategory] = useState<string>("");
   const [searchSupplier, setSearchSupplier] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
@@ -141,14 +142,12 @@ export function InvoicesList() {
     },
   });
 
-  const exportQuery = useExportInvoices({
-    query: { queryKey: getExportInvoicesQueryKey(), enabled: false },
-  });
-
   const handleExport = async () => {
-    const result = await exportQuery.refetch();
-    if (result.data) {
-      const { fileBase64, filename } = result.data;
+    setIsExporting(true);
+    try {
+      const res = await fetch(`/api/invoices/export?lang=${language}`);
+      if (!res.ok) throw new Error("Export failed");
+      const { fileBase64, filename } = await res.json();
       const blob = new Blob([Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0))], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
@@ -158,6 +157,10 @@ export function InvoicesList() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: t("invoices.errorDeleting"), variant: "destructive" });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -252,7 +255,7 @@ export function InvoicesList() {
           <Button
             variant="outline"
             onClick={handleExport}
-            disabled={exportQuery.isFetching}
+            disabled={isExporting}
             data-testid="button-export-excel"
           >
             <Download className="h-4 w-4 mr-2" />

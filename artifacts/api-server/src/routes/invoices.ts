@@ -129,25 +129,29 @@ router.get("/invoices/summary", async (_req, res): Promise<void> => {
   });
 });
 
-router.get("/invoices/export", async (_req, res): Promise<void> => {
+router.get("/invoices/export", async (req, res): Promise<void> => {
+  const lang = req.query["lang"] === "en" ? "en" : "es";
+  const en = lang === "en";
+
   const invoices = await db.select().from(invoicesTable).orderBy(desc(invoicesTable.createdAt));
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Gestor de Facturas Finca";
   workbook.created = new Date();
 
-  const invoiceSheet = workbook.addWorksheet("Facturas");
+  const invoiceSheet = workbook.addWorksheet(en ? "Invoices" : "Facturas");
   invoiceSheet.columns = [
-    { header: "ID Factura", key: "id", width: 12 },
-    { header: "Numero Factura", key: "invoiceNumber", width: 20 },
-    { header: "Proveedor", key: "supplier", width: 25 },
-    { header: "Fecha Compra", key: "date", width: 15 },
-    { header: "Categoria", key: "category", width: 20 },
-    { header: "Costo Total", key: "totalAmount", width: 15 },
-    { header: "Descripcion", key: "description", width: 60 },
-    { header: "Notas", key: "notes", width: 40 },
-    { header: "Comprador", key: "buyer", width: 20 },
-    { header: "Fecha Registro", key: "createdAt", width: 20 },
+    { header: en ? "Invoice ID" : "ID Factura", key: "id", width: 12 },
+    { header: en ? "Invoice Number" : "Numero Factura", key: "invoiceNumber", width: 20 },
+    { header: en ? "Supplier" : "Proveedor", key: "supplier", width: 25 },
+    { header: en ? "Purchase Date" : "Fecha Compra", key: "date", width: 15 },
+    { header: en ? "Category" : "Categoria", key: "category", width: 20 },
+    { header: en ? "Total Cost" : "Costo Total", key: "totalAmount", width: 15 },
+    { header: en ? "Description" : "Descripcion", key: "description", width: 60 },
+    { header: en ? "Notes" : "Notas", key: "notes", width: 40 },
+    { header: en ? "Buyer" : "Comprador", key: "buyer", width: 20 },
+    { header: en ? "Created By" : "Creado Por", key: "createdBy", width: 20 },
+    { header: en ? "Registration Date" : "Fecha Registro", key: "createdAt", width: 20 },
   ];
 
   invoiceSheet.getRow(1).font = { bold: true };
@@ -163,22 +167,24 @@ router.get("/invoices/export", async (_req, res): Promise<void> => {
       description: inv.description ?? "",
       notes: inv.notes ?? "",
       buyer: inv.buyer ?? "",
+      createdBy: inv.createdBy ?? "",
       createdAt: inv.createdAt.toISOString().split("T")[0],
     });
   }
 
   const supplierMap = new Map(invoices.map((inv) => [inv.id, inv.supplier]));
 
-  const itemsSheet = workbook.addWorksheet("Items");
+  const itemsSheet = workbook.addWorksheet(en ? "Items" : "Items");
   itemsSheet.columns = [
-    { header: "ID Item", key: "id", width: 10 },
-    { header: "ID Factura", key: "invoiceId", width: 12 },
-    { header: "Proveedor", key: "supplier", width: 25 },
-    { header: "Descripcion", key: "description", width: 40 },
-    { header: "Cantidad", key: "quantity", width: 12 },
-    { header: "Unidad", key: "unit", width: 12 },
-    { header: "Precio Unitario", key: "unitPrice", width: 16 },
-    { header: "Total", key: "totalPrice", width: 15 },
+    { header: en ? "Item ID" : "ID Item", key: "id", width: 10 },
+    { header: en ? "Invoice ID" : "ID Factura", key: "invoiceId", width: 12 },
+    { header: en ? "Supplier" : "Proveedor", key: "supplier", width: 25 },
+    { header: en ? "Item Name" : "Nombre Articulo", key: "name", width: 30 },
+    { header: en ? "Description" : "Descripcion", key: "description", width: 40 },
+    { header: en ? "Qty." : "Cantidad", key: "quantity", width: 12 },
+    { header: en ? "Unit" : "Unidad", key: "unit", width: 12 },
+    { header: en ? "Unit Price" : "Precio Unitario", key: "unitPrice", width: 16 },
+    { header: en ? "Total" : "Total", key: "totalPrice", width: 15 },
   ];
   itemsSheet.getRow(1).font = { bold: true };
 
@@ -188,6 +194,7 @@ router.get("/invoices/export", async (_req, res): Promise<void> => {
       id: item.id,
       invoiceId: item.invoiceId,
       supplier: supplierMap.get(item.invoiceId ?? 0) ?? "",
+      name: item.name ?? "",
       description: item.description,
       quantity: item.quantity ? parseFloat(item.quantity) : "",
       unit: item.unit ?? "",
@@ -198,7 +205,8 @@ router.get("/invoices/export", async (_req, res): Promise<void> => {
 
   const buffer = await workbook.xlsx.writeBuffer();
   const fileBase64 = Buffer.from(buffer).toString("base64");
-  const filename = `facturas_${new Date().toISOString().split("T")[0]}.xlsx`;
+  const today = new Date().toISOString().split("T")[0];
+  const filename = en ? `invoices_${today}.xlsx` : `facturas_${today}.xlsx`;
 
   res.json({ fileBase64, filename });
 });
