@@ -546,7 +546,7 @@ export function InvoiceDetail() {
                 <table className="w-full text-sm" data-testid="table-invoice-items">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemDescription")}</th>
+                      <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemNameHeader")}</th>
                       <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemQty")}</th>
                       <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemUnit")}</th>
                       <th className="text-right pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemUnitPrice")}</th>
@@ -556,11 +556,20 @@ export function InvoiceDetail() {
                   <tbody className="divide-y divide-border">
                     {invoice.items.map((item, idx) => (
                       <tr key={item.id} data-testid={`row-item-detail-${idx}`}>
-                        <td className="py-2 pr-4">{item.description}</td>
-                        <td className="py-2 text-right">{item.quantity ?? "—"}</td>
-                        <td className="py-2 px-4 text-muted-foreground">{item.unit ?? "—"}</td>
-                        <td className="py-2 text-right">{item.unitPrice != null ? formatCurrency(item.unitPrice) : "—"}</td>
-                        <td className="py-2 text-right font-medium">{item.totalPrice != null ? formatCurrency(item.totalPrice) : "—"}</td>
+                        <td className="py-2 pr-4 align-top">
+                          {item.name && (
+                            <p className="font-medium" data-testid={`text-item-name-${idx}`}>{item.name}</p>
+                          )}
+                          {item.description && (
+                            <p className={item.name ? "text-xs text-muted-foreground mt-0.5" : ""} data-testid={`text-item-description-${idx}`}>
+                              {item.description}
+                            </p>
+                          )}
+                        </td>
+                        <td className="py-2 text-right align-top">{item.quantity ?? "—"}</td>
+                        <td className="py-2 px-4 text-muted-foreground align-top">{item.unit ?? "—"}</td>
+                        <td className="py-2 text-right align-top">{item.unitPrice != null ? formatCurrency(item.unitPrice) : "—"}</td>
+                        <td className="py-2 text-right font-medium align-top">{item.totalPrice != null ? formatCurrency(item.totalPrice) : "—"}</td>
                       </tr>
                     ))}
                   </tbody>
