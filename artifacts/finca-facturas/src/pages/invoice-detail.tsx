@@ -454,7 +454,7 @@ export function InvoiceDetail() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemDescription")}</th>
+                        <th className="text-left pb-2 font-medium text-muted-foreground">{t("invoiceDetail.itemNameHeader")}</th>
                         <th className="text-right pb-2 font-medium text-muted-foreground w-20">{t("invoiceDetail.itemQty")}</th>
                         <th className="text-left pb-2 font-medium text-muted-foreground w-24 px-2">{t("invoiceDetail.itemUnit")}</th>
                         <th className="text-right pb-2 font-medium text-muted-foreground w-28">{t("invoiceDetail.itemUnitPrice")}</th>
@@ -465,14 +465,23 @@ export function InvoiceDetail() {
                     <tbody className="divide-y divide-border">
                       {editItems.map((item, idx) => (
                         <tr key={idx} data-testid={`row-item-edit-${idx}`}>
-                          <td className="py-1 pr-2">
-                            <Input
-                              value={item.description}
-                              onChange={(e) => handleItemChange(idx, "description", e.target.value)}
-                              placeholder={t("invoiceDetail.itemDescription")}
-                              className="h-8 text-sm"
-                              data-testid={`edit-item-description-${idx}`}
-                            />
+                          <td className="py-1 pr-2 align-top">
+                            <div className="space-y-1">
+                              <Input
+                                value={item.name ?? ""}
+                                onChange={(e) => handleItemChange(idx, "name", e.target.value)}
+                                placeholder={t("invoiceDetail.itemNameHeader")}
+                                className="h-8 text-sm font-medium"
+                                data-testid={`edit-item-name-${idx}`}
+                              />
+                              <Input
+                                value={item.description}
+                                onChange={(e) => handleItemChange(idx, "description", e.target.value)}
+                                placeholder={t("invoiceDetail.itemDescription")}
+                                className="h-8 text-sm"
+                                data-testid={`edit-item-description-${idx}`}
+                              />
+                            </div>
                           </td>
                           <td className="py-1 px-1">
                             <Input
