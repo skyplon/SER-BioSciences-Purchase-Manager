@@ -287,9 +287,26 @@ export function InvoiceDetail() {
       </div>
 
       {/* Invoice info */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
         <Card>
           <CardContent className="pt-6">
+            {/* Total banner */}
+            <div className="mb-6 flex items-center justify-between gap-4 rounded-lg border bg-muted/40 px-4 py-3">
+              <p className="text-sm text-muted-foreground">{t("invoiceDetail.totalPurchase")}</p>
+              {isEditing ? (
+                <Input
+                  type="number"
+                  value={editTotal}
+                  onChange={(e) => setEditTotal(e.target.value)}
+                  className="max-w-[200px] text-2xl font-bold h-12 text-right"
+                  data-testid="edit-total"
+                />
+              ) : (
+                <p className="text-3xl sm:text-4xl font-bold text-foreground" data-testid="text-invoice-total">
+                  {formatCurrency(invoice.totalAmount)}
+                </p>
+              )}
+            </div>
             {isEditing ? (
               <div className="space-y-4">
                 <div className="space-y-1">
@@ -391,30 +408,6 @@ export function InvoiceDetail() {
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6 flex items-center justify-center">
-            {isEditing ? (
-              <div className="w-full space-y-1">
-                <Label className="text-xs text-muted-foreground">{t("invoiceDetail.totalPurchase")}</Label>
-                <Input
-                  type="number"
-                  value={editTotal}
-                  onChange={(e) => setEditTotal(e.target.value)}
-                  className="text-2xl font-bold h-14 text-center"
-                  data-testid="edit-total"
-                />
-              </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground mb-1">{t("invoiceDetail.totalPurchase")}</p>
-                <p className="text-4xl font-bold text-foreground" data-testid="text-invoice-total">
-                  {formatCurrency(invoice.totalAmount)}
-                </p>
               </div>
             )}
           </CardContent>
