@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck, FileType, Wand2 } from "lucide-react";
+import { Camera, Upload, Plus, Trash2, ArrowLeft, Loader2, CheckCircle, ShieldCheck, FileType, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { BUYER_OPTIONS } from "@/lib/buyers";
@@ -76,9 +76,8 @@ export function InvoiceNew() {
   const [extracted, setExtracted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [validating, setValidating] = useState(false);
-  const [completing, setCompleting] = useState(false);
 
-  type AiMode = "extract" | "validate" | "complete";
+  type AiMode = "extract" | "validate";
   const [aiStep, setAiStep] = useState(0);
   const [aiMode, setAiMode] = useState<AiMode>("extract");
   const [aiDone, setAiDone] = useState(false);
@@ -233,6 +232,7 @@ export function InvoiceNew() {
         })));
       }
       setExtracted(true);
+      setShowErrors(true);
       finishAi(true);
       toast({ title: t("invoiceNew.wordExtracted") });
     } catch {
@@ -271,6 +271,7 @@ export function InvoiceNew() {
         );
       }
       setExtracted(true);
+      setShowErrors(true);
       finishAi(true);
       toast({ title: t("invoiceNew.extractedOk") });
     } catch {
@@ -370,82 +371,6 @@ export function InvoiceNew() {
     });
     setItems(updated);
     return { updated, filled };
-  };
-
-  const handleComplete = async () => {
-    setAiMode("complete");
-    setAiDone(false);
-    setAiError(false);
-    clearStepTimers();
-    setAiStep(1);
-    scheduleAiStep(2, 1500);
-    setCompleting(true);
-    try {
-      const { updated } = handleFillPrices();
-      const completedItems = updated.filter((i) => i.name.trim() || i.description.trim());
-
-      const token = await getToken();
-      const response = await fetch("/api/ocr/complete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          imageBase64: imageBase64 || null,
-          invoiceNumber: invoiceNumber || null,
-          supplier: supplier || null,
-          date: date || null,
-          category: category || null,
-          totalAmount: totalAmount ? parseFloat(totalAmount) : null,
-          description: description || null,
-          notes: notes || null,
-          items: completedItems.map((i) => ({
-            name: i.name.trim() || i.description.trim(),
-            description: i.description.trim() || i.name.trim(),
-            quantity: i.quantity ? parseFloat(i.quantity) : null,
-            unit: i.unit.trim() || null,
-            unitPrice: i.unitPrice ? parseFloat(i.unitPrice) : null,
-            totalPrice: i.totalPrice ? parseFloat(i.totalPrice) : null,
-          })),
-        }),
-      });
-      if (!response.ok) throw new Error("API error");
-      const data = await response.json() as Record<string, unknown>;
-
-      if (data.supplier) setSupplier(data.supplier as string);
-      if (data.invoiceNumber) setInvoiceNumber(data.invoiceNumber as string);
-      if (data.date) setDate(data.date as string);
-      if (data.category) setCategory(data.category as string);
-      if (data.totalAmount != null) setTotalAmount(String(data.totalAmount));
-      if (data.description) setDescription(data.description as string);
-      if (data.notes) setNotes(data.notes as string);
-      const rawItems = data.items as Array<Record<string, unknown>> | undefined;
-      if (rawItems && rawItems.length > 0) {
-        setItems(rawItems.map((item) => ({
-          name: String(item.name ?? ""),
-          description: String(item.description ?? ""),
-          quantity: item.quantity != null ? String(item.quantity) : "",
-          unit: String(item.unit ?? ""),
-          unitPrice: item.unitPrice != null ? String(item.unitPrice) : "",
-          totalPrice: item.totalPrice != null ? String(item.totalPrice) : "",
-        })));
-      }
-      finishAi(true);
-      const buyerStillEmpty = !buyer;
-      toast({
-        title: buyerStillEmpty
-          ? t("invoiceNew.completeOkBuyerMissing")
-          : t("invoiceNew.completeOk"),
-        variant: buyerStillEmpty ? "default" : "default",
-        duration: buyerStillEmpty ? 6000 : 4000,
-      });
-    } catch {
-      toast({ title: t("invoiceNew.completeError"), variant: "destructive" });
-      finishAi(false);
-    } finally {
-      setCompleting(false);
-    }
   };
 
   const hasFile = !!(imageBase64 || docxName);
@@ -985,20 +910,27 @@ export function InvoiceNew() {
         </CardContent>
       </Card>
 
+      {extracted && !allFieldsFilled && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/40 p-3 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="font-medium">{t("invoiceNew.missingFieldsTitle")}</p>
+            <p className="text-xs mt-0.5 opacity-90">{t("invoiceNew.missingFieldsBody")}</p>
+          </div>
+        </div>
+      )}
+
       {aiStep > 0 && aiMode !== "extract" && (
         <AiProgressSteps
-          title={aiMode === "validate" ? t("aiSteps.validateTitle") : t("aiSteps.completeTitle")}
-          steps={aiMode === "validate" ? [
+          title={t("aiSteps.validateTitle")}
+          steps={[
             t("aiSteps.step.reviewingFields"),
             t("aiSteps.step.fixingWithAi"),
-          ] : [
-            t("aiSteps.step.preparingData"),
-            t("aiSteps.step.completingWithAi"),
           ]}
           currentStep={aiStep}
           done={aiDone}
           error={aiError}
-          doneLabel={aiMode === "validate" ? t("aiSteps.doneValidate") : t("aiSteps.doneComplete")}
+          doneLabel={t("aiSteps.doneValidate")}
           errorLabel={t("aiSteps.error")}
         />
       )}
@@ -1011,22 +943,8 @@ export function InvoiceNew() {
         <Button
           variant="outline"
           className="w-full sm:w-auto"
-          onClick={handleComplete}
-          disabled={!hasFile || completing || extracting}
-          data-testid="button-complete-invoice"
-        >
-          {completing ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Wand2 className="h-4 w-4 mr-2" />
-          )}
-          {t("invoiceNew.completeAI")}
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
           onClick={handleValidate}
-          disabled={!allFieldsFilled || validating || completing || extracting}
+          disabled={!allFieldsFilled || validating || extracting}
           data-testid="button-validate-invoice"
         >
           {validating ? (

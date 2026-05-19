@@ -375,19 +375,19 @@ export function InvoiceDetail() {
                 )}
                 {invoice.description && (
                   <div className="flex items-start gap-3">
-                    <AlignLeft className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
+                    <AlignLeft className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground">{t("invoiceDetail.description")}</p>
-                      <p className="text-sm" data-testid="text-invoice-description">{invoice.description}</p>
+                      <p className="text-sm break-words whitespace-pre-line" data-testid="text-invoice-description">{invoice.description}</p>
                     </div>
                   </div>
                 )}
                 {invoice.notes && (
                   <div className="flex items-start gap-3">
-                    <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
+                    <FileText className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground">{t("invoiceDetail.notes")}</p>
-                      <p className="text-sm whitespace-pre-line" data-testid="text-invoice-notes">{invoice.notes}</p>
+                      <p className="text-sm break-words whitespace-pre-line" data-testid="text-invoice-notes">{invoice.notes}</p>
                     </div>
                   </div>
                 )}
