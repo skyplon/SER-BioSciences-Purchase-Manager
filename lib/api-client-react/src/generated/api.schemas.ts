@@ -197,6 +197,71 @@ export interface AppNotification {
   createdAt: string;
 }
 
+/**
+ * @nullable
+ */
+export type AuditLogChanges = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type AuditLogMetadata = { [key: string]: unknown } | null;
+
+export interface AuditLog {
+  id: number;
+  action: string;
+  entityType: string;
+  /** @nullable */
+  entityId?: number | null;
+  /** @nullable */
+  entityLabel?: string | null;
+  userId: string;
+  /** @nullable */
+  userEmail?: string | null;
+  /** @nullable */
+  userName?: string | null;
+  /** @nullable */
+  changes?: AuditLogChanges;
+  /** @nullable */
+  metadata?: AuditLogMetadata;
+  createdAt: string;
+}
+
+export interface AuditActionCount {
+  action: string;
+  count: number;
+}
+
+export interface AuditUserCount {
+  userId: string;
+  /** @nullable */
+  userName?: string | null;
+  /** @nullable */
+  userEmail?: string | null;
+  count: number;
+}
+
+export interface AuditEntityTypeCount {
+  entityType: string;
+  count: number;
+}
+
+export interface AuditDayCount {
+  day: string;
+  count: number;
+}
+
+export interface AuditStats {
+  totalEvents: number;
+  last24h: number;
+  last7d: number;
+  last30d: number;
+  byAction: AuditActionCount[];
+  byUser: AuditUserCount[];
+  byEntityType: AuditEntityTypeCount[];
+  recentActivity: AuditDayCount[];
+}
+
 export interface ValidateInvoiceBody {
   /** @nullable */
   invoiceNumber?: string | null;
@@ -229,5 +294,16 @@ export type ListInvoicesParams = {
 };
 
 export type ListNotificationsParams = {
+  limit?: number;
+};
+
+export type ListAuditLogsParams = {
+  search?: string;
+  action?: string;
+  entityType?: string;
+  entityId?: number;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
   limit?: number;
 };

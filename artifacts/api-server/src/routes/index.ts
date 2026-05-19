@@ -4,6 +4,7 @@ import healthRouter from "./health";
 import invoicesRouter from "./invoices";
 import notificationsRouter from "./notifications";
 import ocrRouter from "./ocr";
+import auditRouter from "./audit";
 
 const router: IRouter = Router();
 
@@ -21,5 +22,6 @@ router.use(requireAuth);
 router.use(invoicesRouter);
 router.use(notificationsRouter);
 router.use(ocrRouter);
+router.use(auditRouter);
 
 export default router;

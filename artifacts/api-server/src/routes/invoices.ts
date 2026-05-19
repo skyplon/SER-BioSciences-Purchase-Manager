@@ -13,6 +13,7 @@ import {
 import ExcelJS from "exceljs";
 import { syncInvoiceToNotion } from "../lib/notion.js";
 import { buildInvoiceImageUrl } from "../lib/imageUpload.js";
+import { logAudit, diffSnapshots } from "../lib/audit.js";
 
 const router: IRouter = Router();
 
@@ -173,6 +174,23 @@ router.post("/invoices/bulk-delete", async (req, res): Promise<void> => {
   }
   const deleted = await db.delete(invoicesTable).where(inArray(invoicesTable.id, ids)).returning();
   res.json({ deleted: deleted.length });
+
+  for (const inv of deleted) {
+    logAudit(req, {
+      action: "deleted",
+      entityType: "invoice",
+      entityId: inv.id,
+      entityLabel: inv.supplier,
+      changes: {
+        supplier: inv.supplier,
+        invoiceNumber: inv.invoiceNumber,
+        date: inv.date,
+        category: inv.category,
+        totalAmount: inv.totalAmount ? parseFloat(inv.totalAmount) : null,
+      },
+      metadata: { bulkDelete: true, batchSize: deleted.length },
+    });
+  }
 });
 
 router.get("/invoices/export", async (req, res): Promise<void> => {
@@ -268,6 +286,18 @@ router.get("/invoices/export", async (req, res): Promise<void> => {
   const filename = en ? `invoices_${today}.xlsx` : `facturas_${today}.xlsx`;
 
   res.json({ fileBase64, filename });
+
+  logAudit(req, {
+    action: "exported",
+    entityType: "invoice",
+    entityLabel: filename,
+    metadata: {
+      count: invoices.length,
+      itemCount: items.length,
+      language: lang,
+      filterIds: filterIds ?? null,
+    },
+  });
 });
 
 router.post("/invoices", async (req, res): Promise<void> => {
@@ -310,6 +340,21 @@ router.post("/invoices", async (req, res): Promise<void> => {
     invoiceSupplier: invoice.supplier,
     actorName: invoiceData.createdBy ?? null,
   }).catch(() => {});
+
+  logAudit(req, {
+    action: "created",
+    entityType: "invoice",
+    entityId: invoice.id,
+    entityLabel: invoice.supplier,
+    changes: result ? {
+      supplier: result.supplier,
+      invoiceNumber: result.invoiceNumber,
+      date: result.date,
+      category: result.category,
+      totalAmount: result.totalAmount,
+      itemCount: result.items.length,
+    } : null,
+  });
 
   if (result) {
     syncInvoiceToNotion({
@@ -389,6 +434,8 @@ router.patch("/invoices/:id", async (req, res): Promise<void> => {
 
   const { items, ...invoiceData } = parsed.data;
 
+  const beforeSnapshot = await getInvoiceWithItems(params.data.id);
+
   const updateData: Record<string, unknown> = {};
   if (invoiceData.invoiceNumber !== undefined) updateData.invoiceNumber = invoiceData.invoiceNumber;
   if (invoiceData.supplier !== undefined) updateData.supplier = invoiceData.supplier;
@@ -444,6 +491,41 @@ router.patch("/invoices/:id", async (req, res): Promise<void> => {
     invoiceSupplier: result.supplier,
     actorName: invoiceData.updatedBy ?? null,
   }).catch(() => {});
+
+  if (beforeSnapshot) {
+    const before = {
+      supplier: beforeSnapshot.supplier,
+      invoiceNumber: beforeSnapshot.invoiceNumber,
+      date: beforeSnapshot.date,
+      category: beforeSnapshot.category,
+      totalAmount: beforeSnapshot.totalAmount,
+      description: beforeSnapshot.description,
+      notes: beforeSnapshot.notes,
+      buyer: beforeSnapshot.buyer,
+      itemCount: beforeSnapshot.items.length,
+    };
+    const after = {
+      supplier: result.supplier,
+      invoiceNumber: result.invoiceNumber,
+      date: result.date,
+      category: result.category,
+      totalAmount: result.totalAmount,
+      description: result.description,
+      notes: result.notes,
+      buyer: result.buyer,
+      itemCount: result.items.length,
+    };
+    const diff = diffSnapshots(before, after);
+    if (Object.keys(diff).length > 0) {
+      logAudit(req, {
+        action: "updated",
+        entityType: "invoice",
+        entityId: params.data.id,
+        entityLabel: result.supplier,
+        changes: diff,
+      });
+    }
+  }
 });
 
 router.delete("/invoices/:id", async (req, res): Promise<void> => {
@@ -471,6 +553,20 @@ router.delete("/invoices/:id", async (req, res): Promise<void> => {
     invoiceSupplier: deleted.supplier,
     actorName: null,
   }).catch(() => {});
+
+  logAudit(req, {
+    action: "deleted",
+    entityType: "invoice",
+    entityId: params.data.id,
+    entityLabel: deleted.supplier,
+    changes: {
+      supplier: deleted.supplier,
+      invoiceNumber: deleted.invoiceNumber,
+      date: deleted.date,
+      category: deleted.category,
+      totalAmount: deleted.totalAmount ? parseFloat(deleted.totalAmount) : null,
+    },
+  });
 });
 
 router.get("/suppliers", async (req, res): Promise<void> => {

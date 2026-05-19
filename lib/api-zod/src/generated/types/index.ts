@@ -7,6 +7,14 @@
  */
 
 export * from "./appNotification";
+export * from "./auditActionCount";
+export * from "./auditDayCount";
+export * from "./auditEntityTypeCount";
+export * from "./auditLog";
+export * from "./auditLogChanges";
+export * from "./auditLogMetadata";
+export * from "./auditStats";
+export * from "./auditUserCount";
 export * from "./categorySummary";
 export * from "./createInvoiceBody";
 export * from "./createInvoiceItemBody";
@@ -18,6 +26,7 @@ export * from "./healthStatus";
 export * from "./invoice";
 export * from "./invoiceItem";
 export * from "./invoiceSummary";
+export * from "./listAuditLogsParams";
 export * from "./listInvoicesParams";
 export * from "./listNotificationsParams";
 export * from "./monthSummary";

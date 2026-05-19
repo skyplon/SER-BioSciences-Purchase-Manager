@@ -16,6 +16,8 @@ tags:
     description: Notification operations
   - name: ocr
     description: OCR and AI extraction operations
+  - name: audit
+    description: Audit log and governance operations
 paths:
   /healthz:
     get:
@@ -265,6 +267,72 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ExtractedInvoiceData"
+
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [audit]
+      summary: List audit log entries
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: entityType
+          in: query
+          schema: { type: string }
+        - name: entityId
+          in: query
+          schema: { type: integer }
+        - name: userId
+          in: query
+          schema: { type: string }
+        - name: startDate
+          in: query
+          schema: { type: string }
+        - name: endDate
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
+  /audit-logs/stats:
+    get:
+      operationId: getAuditLogStats
+      tags: [audit]
+      summary: Aggregated audit statistics
+      responses:
+        "200":
+          description: Audit statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditStats"
+
+  /audit-logs/export:
+    get:
+      operationId: exportAuditLogs
+      tags: [audit]
+      summary: Export audit logs to Excel
+      responses:
+        "200":
+          description: Excel file as base64
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportResponse"
 
 components:
   schemas:
@@ -598,6 +666,107 @@ components:
       required:
         - name
         - description
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: ["integer", "null"]
+        entityLabel:
+          type: ["string", "null"]
+        userId:
+          type: string
+        userEmail:
+          type: ["string", "null"]
+        userName:
+          type: ["string", "null"]
+        changes:
+          type: ["object", "null"]
+          additionalProperties: true
+        metadata:
+          type: ["object", "null"]
+          additionalProperties: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - action
+        - entityType
+        - userId
+        - createdAt
+
+    AuditStats:
+      type: object
+      properties:
+        totalEvents:
+          type: integer
+        last24h:
+          type: integer
+        last7d:
+          type: integer
+        last30d:
+          type: integer
+        byAction:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditActionCount"
+        byUser:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditUserCount"
+        byEntityType:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEntityTypeCount"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditDayCount"
+      required:
+        - totalEvents
+        - last24h
+        - last7d
+        - last30d
+        - byAction
+        - byUser
+        - byEntityType
+        - recentActivity
+
+    AuditActionCount:
+      type: object
+      properties:
+        action: { type: string }
+        count: { type: integer }
+      required: [action, count]
+
+    AuditUserCount:
+      type: object
+      properties:
+        userId: { type: string }
+        userName: { type: ["string", "null"] }
+        userEmail: { type: ["string", "null"] }
+        count: { type: integer }
+      required: [userId, count]
+
+    AuditEntityTypeCount:
+      type: object
+      properties:
+        entityType: { type: string }
+        count: { type: integer }
+      required: [entityType, count]
+
+    AuditDayCount:
+      type: object
+      properties:
+        day: { type: string }
+        count: { type: integer }
+      required: [day, count]
 
     ValidateInvoiceBody:
       type: object

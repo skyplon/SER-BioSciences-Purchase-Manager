@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, PlusCircle, Menu, X, LogOut, User, Settings, Building2, CalendarDays } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Menu, X, LogOut, User, Settings, Building2, CalendarDays, Activity } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useClerk, useUser } from "@clerk/react";
@@ -59,6 +59,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   const bottomNavItems = [
+    { href: "/audit", label: t("nav.audit"), icon: Activity },
     { href: "/settings", label: t("nav.settings"), icon: Settings },
   ];
 

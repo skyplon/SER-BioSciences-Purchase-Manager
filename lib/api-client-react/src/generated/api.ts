@@ -18,6 +18,8 @@ import type {
 
 import type {
   AppNotification,
+  AuditLog,
+  AuditStats,
   CreateInvoiceBody,
   ExportResponse,
   ExtractInvoiceBody,
@@ -26,6 +28,7 @@ import type {
   Invoice,
   InvoiceItem,
   InvoiceSummary,
+  ListAuditLogsParams,
   ListInvoicesParams,
   ListNotificationsParams,
   SupplierStats,
@@ -1136,3 +1139,247 @@ export const useValidateInvoiceData = <
 > => {
   return useMutation(getValidateInvoiceDataMutationOptions(options));
 };
+
+/**
+ * @summary List audit log entries
+ */
+export const getListAuditLogsUrl = (params?: ListAuditLogsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/audit-logs?${stringifiedParams}`
+    : `/api/audit-logs`;
+};
+
+export const listAuditLogs = async (
+  params?: ListAuditLogsParams,
+  options?: RequestInit,
+): Promise<AuditLog[]> => {
+  return customFetch<AuditLog[]>(getListAuditLogsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAuditLogsQueryKey = (params?: ListAuditLogsParams) => {
+  return [`/api/audit-logs`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAuditLogsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAuditLogs>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListAuditLogsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAuditLogs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAuditLogsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuditLogs>>> = ({
+    signal,
+  }) => listAuditLogs(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAuditLogs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAuditLogsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAuditLogs>>
+>;
+export type ListAuditLogsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List audit log entries
+ */
+
+export function useListAuditLogs<
+  TData = Awaited<ReturnType<typeof listAuditLogs>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListAuditLogsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAuditLogs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAuditLogsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Aggregated audit statistics
+ */
+export const getGetAuditLogStatsUrl = () => {
+  return `/api/audit-logs/stats`;
+};
+
+export const getAuditLogStats = async (
+  options?: RequestInit,
+): Promise<AuditStats> => {
+  return customFetch<AuditStats>(getGetAuditLogStatsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAuditLogStatsQueryKey = () => {
+  return [`/api/audit-logs/stats`] as const;
+};
+
+export const getGetAuditLogStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAuditLogStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAuditLogStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAuditLogStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAuditLogStats>>
+  > = ({ signal }) => getAuditLogStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAuditLogStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAuditLogStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAuditLogStats>>
+>;
+export type GetAuditLogStatsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Aggregated audit statistics
+ */
+
+export function useGetAuditLogStats<
+  TData = Awaited<ReturnType<typeof getAuditLogStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAuditLogStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAuditLogStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Export audit logs to Excel
+ */
+export const getExportAuditLogsUrl = () => {
+  return `/api/audit-logs/export`;
+};
+
+export const exportAuditLogs = async (
+  options?: RequestInit,
+): Promise<ExportResponse> => {
+  return customFetch<ExportResponse>(getExportAuditLogsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportAuditLogsQueryKey = () => {
+  return [`/api/audit-logs/export`] as const;
+};
+
+export const getExportAuditLogsQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAuditLogs>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof exportAuditLogs>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportAuditLogsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportAuditLogs>>> = ({
+    signal,
+  }) => exportAuditLogs({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAuditLogs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ExportAuditLogsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAuditLogs>>
+>;
+export type ExportAuditLogsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Export audit logs to Excel
+ */
+
+export function useExportAuditLogs<
+  TData = Awaited<ReturnType<typeof exportAuditLogs>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof exportAuditLogs>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getExportAuditLogsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

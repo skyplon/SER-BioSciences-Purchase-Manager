@@ -12,6 +12,7 @@ import { InvoicesList } from "@/pages/invoices-list";
 import { InvoiceNew } from "@/pages/invoice-new";
 import { InvoiceDetail } from "@/pages/invoice-detail";
 import { SettingsPage } from "@/pages/settings";
+import { AuditPage } from "@/pages/audit";
 import { SuppliersPage } from "@/pages/suppliers";
 import { CalendarPage } from "@/pages/calendar";
 import NotFound from "@/pages/not-found";
@@ -173,6 +174,7 @@ function AuthGuard() {
             <Route path="/suppliers" component={SuppliersPage} />
             <Route path="/calendar" component={CalendarPage} />
             <Route path="/settings" component={SettingsPage} />
+            <Route path="/audit" component={AuditPage} />
             <Route component={NotFound} />
           </Switch>
         </Layout>

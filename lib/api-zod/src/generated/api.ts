@@ -380,3 +380,76 @@ export const ValidateInvoiceDataResponse = zod.object({
     }),
   ),
 });
+
+/**
+ * @summary List audit log entries
+ */
+export const ListAuditLogsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  action: zod.coerce.string().optional(),
+  entityType: zod.coerce.string().optional(),
+  entityId: zod.coerce.number().optional(),
+  userId: zod.coerce.string().optional(),
+  startDate: zod.coerce.string().optional(),
+  endDate: zod.coerce.string().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const ListAuditLogsResponseItem = zod.object({
+  id: zod.number(),
+  action: zod.string(),
+  entityType: zod.string(),
+  entityId: zod.number().nullish(),
+  entityLabel: zod.string().nullish(),
+  userId: zod.string(),
+  userEmail: zod.string().nullish(),
+  userName: zod.string().nullish(),
+  changes: zod.record(zod.string(), zod.unknown()).nullish(),
+  metadata: zod.record(zod.string(), zod.unknown()).nullish(),
+  createdAt: zod.string(),
+});
+export const ListAuditLogsResponse = zod.array(ListAuditLogsResponseItem);
+
+/**
+ * @summary Aggregated audit statistics
+ */
+export const GetAuditLogStatsResponse = zod.object({
+  totalEvents: zod.number(),
+  last24h: zod.number(),
+  last7d: zod.number(),
+  last30d: zod.number(),
+  byAction: zod.array(
+    zod.object({
+      action: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  byUser: zod.array(
+    zod.object({
+      userId: zod.string(),
+      userName: zod.string().nullish(),
+      userEmail: zod.string().nullish(),
+      count: zod.number(),
+    }),
+  ),
+  byEntityType: zod.array(
+    zod.object({
+      entityType: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  recentActivity: zod.array(
+    zod.object({
+      day: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Export audit logs to Excel
+ */
+export const ExportAuditLogsResponse = zod.object({
+  fileBase64: zod.string(),
+  filename: zod.string(),
+});
