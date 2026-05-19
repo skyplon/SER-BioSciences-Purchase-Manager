@@ -37,6 +37,8 @@ export interface Invoice {
   /** @nullable */
   imageBase64?: string | null;
   /** @nullable */
+  imageHash?: string | null;
+  /** @nullable */
   description?: string | null;
   /** @nullable */
   notes?: string | null;
@@ -149,6 +151,46 @@ export interface SupplierStats {
 export interface ExportResponse {
   fileBase64: string;
   filename: string;
+}
+
+export interface CheckDuplicateBody {
+  /** @nullable */
+  imageBase64?: string | null;
+  /** @nullable */
+  supplier?: string | null;
+  /** @nullable */
+  invoiceNumber?: string | null;
+  /** @nullable */
+  date?: string | null;
+  /** @nullable */
+  totalAmount?: number | null;
+  /** @nullable */
+  excludeId?: number | null;
+}
+
+export type DuplicateMatchMatchType =
+  (typeof DuplicateMatchMatchType)[keyof typeof DuplicateMatchMatchType];
+
+export const DuplicateMatchMatchType = {
+  image: "image",
+  content: "content",
+} as const;
+
+export interface DuplicateMatch {
+  id: number;
+  supplier: string;
+  /** @nullable */
+  invoiceNumber?: string | null;
+  /** @nullable */
+  date?: string | null;
+  /** @nullable */
+  totalAmount?: number | null;
+  createdAt: string;
+  matchType: DuplicateMatchMatchType;
+}
+
+export interface CheckDuplicateResult {
+  duplicates: DuplicateMatch[];
 }
 
 export interface ExtractInvoiceBody {

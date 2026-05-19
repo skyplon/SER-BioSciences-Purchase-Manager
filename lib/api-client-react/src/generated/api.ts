@@ -20,6 +20,8 @@ import type {
   AppNotification,
   AuditLog,
   AuditStats,
+  CheckDuplicateBody,
+  CheckDuplicateResult,
   CreateInvoiceBody,
   ExportResponse,
   ExtractInvoiceBody,
@@ -968,6 +970,92 @@ export function useListInvoiceItems<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Check whether an invoice being prepared duplicates an existing one
+ */
+export const getCheckInvoiceDuplicateUrl = () => {
+  return `/api/invoices/check-duplicate`;
+};
+
+export const checkInvoiceDuplicate = async (
+  checkDuplicateBody: CheckDuplicateBody,
+  options?: RequestInit,
+): Promise<CheckDuplicateResult> => {
+  return customFetch<CheckDuplicateResult>(getCheckInvoiceDuplicateUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(checkDuplicateBody),
+  });
+};
+
+export const getCheckInvoiceDuplicateMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof checkInvoiceDuplicate>>,
+    TError,
+    { data: BodyType<CheckDuplicateBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof checkInvoiceDuplicate>>,
+  TError,
+  { data: BodyType<CheckDuplicateBody> },
+  TContext
+> => {
+  const mutationKey = ["checkInvoiceDuplicate"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof checkInvoiceDuplicate>>,
+    { data: BodyType<CheckDuplicateBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return checkInvoiceDuplicate(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CheckInvoiceDuplicateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof checkInvoiceDuplicate>>
+>;
+export type CheckInvoiceDuplicateMutationBody = BodyType<CheckDuplicateBody>;
+export type CheckInvoiceDuplicateMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Check whether an invoice being prepared duplicates an existing one
+ */
+export const useCheckInvoiceDuplicate = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof checkInvoiceDuplicate>>,
+    TError,
+    { data: BodyType<CheckDuplicateBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof checkInvoiceDuplicate>>,
+  TError,
+  { data: BodyType<CheckDuplicateBody> },
+  TContext
+> => {
+  return useMutation(getCheckInvoiceDuplicateMutationOptions(options));
+};
 
 /**
  * @summary Extract invoice data from image using AI

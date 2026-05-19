@@ -230,6 +230,25 @@ paths:
                 items:
                   $ref: "#/components/schemas/InvoiceItem"
 
+  /invoices/check-duplicate:
+    post:
+      operationId: checkInvoiceDuplicate
+      tags: [invoices]
+      summary: Check whether an invoice being prepared duplicates an existing one
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckDuplicateBody"
+      responses:
+        "200":
+          description: Duplicate match result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckDuplicateResult"
+
   /ocr/extract:
     post:
       operationId: extractInvoiceData
@@ -373,6 +392,8 @@ components:
         totalAmount:
           type: ["number", "null"]
         imageBase64:
+          type: ["string", "null"]
+        imageHash:
           type: ["string", "null"]
         description:
           type: ["string", "null"]
@@ -607,6 +628,56 @@ components:
       required:
         - fileBase64
         - filename
+
+    CheckDuplicateBody:
+      type: object
+      properties:
+        imageBase64:
+          type: ["string", "null"]
+        supplier:
+          type: ["string", "null"]
+        invoiceNumber:
+          type: ["string", "null"]
+        date:
+          type: ["string", "null"]
+        totalAmount:
+          type: ["number", "null"]
+        excludeId:
+          type: ["integer", "null"]
+
+    DuplicateMatch:
+      type: object
+      properties:
+        id:
+          type: integer
+        supplier:
+          type: string
+        invoiceNumber:
+          type: ["string", "null"]
+        date:
+          type: ["string", "null"]
+        totalAmount:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+        matchType:
+          type: string
+          enum: [image, content]
+      required:
+        - id
+        - supplier
+        - createdAt
+        - matchType
+
+    CheckDuplicateResult:
+      type: object
+      properties:
+        duplicates:
+          type: array
+          items:
+            $ref: "#/components/schemas/DuplicateMatch"
+      required:
+        - duplicates
 
     ExtractInvoiceBody:
       type: object

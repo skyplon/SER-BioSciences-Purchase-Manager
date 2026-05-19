@@ -1,24 +1,31 @@
-import { pgTable, text, serial, timestamp, numeric, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, numeric, integer, boolean, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const invoicesTable = pgTable("invoices", {
-  id: serial("id").primaryKey(),
-  invoiceNumber: text("invoice_number"),
-  supplier: text("supplier").notNull(),
-  date: text("date"),
-  category: text("category").notNull().default("Otros"),
-  totalAmount: numeric("total_amount", { precision: 12, scale: 2 }),
-  imageBase64: text("image_base64"),
-  imageObjectPath: text("image_object_path"),
-  description: text("description"),
-  notes: text("notes"),
-  buyer: text("buyer"),
-  createdBy: text("created_by"),
-  updatedBy: text("updated_by"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(() => new Date()),
-});
+export const invoicesTable = pgTable(
+  "invoices",
+  {
+    id: serial("id").primaryKey(),
+    invoiceNumber: text("invoice_number"),
+    supplier: text("supplier").notNull(),
+    date: text("date"),
+    category: text("category").notNull().default("Otros"),
+    totalAmount: numeric("total_amount", { precision: 12, scale: 2 }),
+    imageBase64: text("image_base64"),
+    imageObjectPath: text("image_object_path"),
+    imageHash: text("image_hash"),
+    description: text("description"),
+    notes: text("notes"),
+    buyer: text("buyer"),
+    createdBy: text("created_by"),
+    updatedBy: text("updated_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(() => new Date()),
+  },
+  (t) => ({
+    imageHashIdx: index("invoices_image_hash_idx").on(t.imageHash),
+  })
+);
 
 export const insertInvoiceSchema = createInsertSchema(invoicesTable).omit({
   id: true,

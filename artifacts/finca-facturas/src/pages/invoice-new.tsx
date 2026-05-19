@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
-import { useExtractInvoiceData, useValidateInvoiceData, useCreateInvoice, getListInvoicesQueryKey } from "@workspace/api-client-react";
+import { useExtractInvoiceData, useValidateInvoiceData, useCreateInvoice, useCheckInvoiceDuplicate, getListInvoicesQueryKey, type DuplicateMatch } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, useUser } from "@clerk/react";
 import * as pdfjsLib from "pdfjs-dist";
@@ -76,6 +76,8 @@ export function InvoiceNew() {
   const [extracted, setExtracted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
+  const [duplicateOverride, setDuplicateOverride] = useState(false);
 
   type AiMode = "extract" | "validate";
   const [aiStep, setAiStep] = useState(0);
@@ -110,6 +112,33 @@ export function InvoiceNew() {
   const t = useT();
   const extractMutation = useExtractInvoiceData();
   const validateMutation = useValidateInvoiceData();
+  const duplicateMutation = useCheckInvoiceDuplicate();
+
+  const runDuplicateCheck = async (overrides?: { imageBase64?: string | null; supplier?: string; invoiceNumber?: string; date?: string; totalAmount?: string }): Promise<{ ok: true; duplicates: DuplicateMatch[] } | { ok: false }> => {
+    const payload = {
+      imageBase64: overrides?.imageBase64 !== undefined ? overrides.imageBase64 : (imageBase64 || null),
+      supplier: (overrides?.supplier ?? supplier).trim() || null,
+      invoiceNumber: (overrides?.invoiceNumber ?? invoiceNumber).trim() || null,
+      date: overrides?.date ?? date ?? null,
+      totalAmount: (() => {
+        const v = overrides?.totalAmount ?? totalAmount;
+        return v ? parseFloat(v) : null;
+      })(),
+    };
+    if (!payload.imageBase64 && (!payload.supplier || !payload.invoiceNumber)) {
+      setDuplicates([]);
+      return { ok: true, duplicates: [] };
+    }
+    try {
+      const result = await duplicateMutation.mutateAsync({ data: payload });
+      setDuplicates(result.duplicates);
+      setDuplicateOverride(false);
+      return { ok: true, duplicates: result.duplicates };
+    } catch {
+      return { ok: false };
+    }
+  };
+
   const createMutation = useCreateInvoice({
     mutation: {
       onSuccess: (invoice) => {
@@ -235,6 +264,13 @@ export function InvoiceNew() {
       setShowErrors(true);
       finishAi(true);
       toast({ title: t("invoiceNew.wordExtracted") });
+      void runDuplicateCheck({
+        imageBase64: null,
+        supplier: (data.supplier as string) ?? supplier,
+        invoiceNumber: (data.invoiceNumber as string) ?? invoiceNumber,
+        date: (data.date as string) ?? date,
+        totalAmount: data.totalAmount != null ? String(data.totalAmount) : totalAmount,
+      });
     } catch {
       toast({ title: t("invoiceNew.wordError"), variant: "destructive" });
       finishAi(false);
@@ -274,6 +310,13 @@ export function InvoiceNew() {
       setShowErrors(true);
       finishAi(true);
       toast({ title: t("invoiceNew.extractedOk") });
+      void runDuplicateCheck({
+        imageBase64: base64,
+        supplier: data.supplier ?? supplier,
+        invoiceNumber: data.invoiceNumber ?? invoiceNumber,
+        date: data.date ?? date,
+        totalAmount: data.totalAmount != null ? String(data.totalAmount) : totalAmount,
+      });
     } catch {
       toast({ title: t("invoiceNew.extractError"), variant: "destructive" });
       finishAi(false);
@@ -387,7 +430,7 @@ export function InvoiceNew() {
   const isItemValid = (item: ItemRow) =>
     item.name.trim() && item.description.trim() && item.quantity && item.unit.trim() && item.unitPrice && item.totalPrice;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setShowErrors(true);
 
     const headerInvalid =
@@ -409,6 +452,22 @@ export function InvoiceNew() {
         variant: "destructive",
       });
       return;
+    }
+
+    if (!duplicateOverride) {
+      const checkResult = await runDuplicateCheck();
+      if (!checkResult.ok) {
+        const proceed = window.confirm(t("invoiceNew.duplicateCheckFailed"));
+        if (!proceed) return;
+      } else if (checkResult.duplicates.length > 0) {
+        const first = checkResult.duplicates[0];
+        const msg = first.matchType === "image"
+          ? t("invoiceNew.duplicateConfirmImage")
+          : t("invoiceNew.duplicateConfirmContent");
+        const proceed = window.confirm(`${msg}\n\n${first.supplier} — ${first.invoiceNumber ?? ""}`);
+        if (!proceed) return;
+        setDuplicateOverride(true);
+      }
     }
 
     const createdBy = user?.fullName ?? user?.firstName ?? null;
@@ -478,7 +537,7 @@ export function InvoiceNew() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => { setImageBase64(null); setImagePreview(null); setExtracted(false); }}
+                onClick={() => { setImageBase64(null); setImagePreview(null); setExtracted(false); setDuplicates([]); setDuplicateOverride(false); }}
                 data-testid="button-remove-image"
               >
                 {t("invoiceNew.changeFile")}
@@ -502,7 +561,7 @@ export function InvoiceNew() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => { setDocxName(null); setExtracted(false); }}
+                onClick={() => { setDocxName(null); setExtracted(false); setDuplicates([]); setDuplicateOverride(false); }}
                 data-testid="button-remove-image"
               >
                 {t("invoiceNew.changeFile")}
@@ -920,6 +979,35 @@ export function InvoiceNew() {
         </div>
       )}
 
+      {duplicates.length > 0 && (
+        <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950/40 p-3 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+          <div className="min-w-0 flex-1 text-sm text-red-800 dark:text-red-200">
+            <p className="font-medium">
+              {duplicates[0].matchType === "image"
+                ? t("invoiceNew.duplicateImageTitle")
+                : t("invoiceNew.duplicateContentTitle")}
+            </p>
+            <p className="text-xs mt-0.5 opacity-90">{t("invoiceNew.duplicateBody")}</p>
+            <ul className="mt-2 space-y-1">
+              {duplicates.map((d) => (
+                <li key={d.id} className="text-xs">
+                  <Link href={`/invoices/${d.id}`} className="underline font-medium hover:opacity-80" data-testid={`link-duplicate-${d.id}`}>
+                    #{d.id} — {d.supplier}
+                    {d.invoiceNumber ? ` · ${d.invoiceNumber}` : ""}
+                    {d.date ? ` · ${d.date}` : ""}
+                    {d.totalAmount != null ? ` · $${d.totalAmount.toLocaleString()}` : ""}
+                  </Link>
+                  <span className="ml-2 opacity-70">
+                    ({d.matchType === "image" ? t("invoiceNew.duplicateMatchImage") : t("invoiceNew.duplicateMatchContent")})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {aiStep > 0 && aiMode !== "extract" && (
         <AiProgressSteps
           title={t("aiSteps.validateTitle")}
@@ -957,7 +1045,7 @@ export function InvoiceNew() {
         <Button
           className="w-full sm:w-auto"
           onClick={handleSave}
-          disabled={!allFieldsFilled || createMutation.isPending}
+          disabled={!allFieldsFilled || createMutation.isPending || duplicateMutation.isPending}
           data-testid="button-save-invoice"
         >
           {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

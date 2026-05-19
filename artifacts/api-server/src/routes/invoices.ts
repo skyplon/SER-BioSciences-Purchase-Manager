@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, sql, and, gte, lte, inArray } from "drizzle-orm";
+import { createHash } from "node:crypto";
+import { eq, desc, sql, and, or, gte, lte, inArray, ne, isNotNull } from "drizzle-orm";
 import { db, invoicesTable, invoiceItemsTable, notificationsTable } from "@workspace/db";
 import {
   CreateInvoiceBody,
@@ -20,6 +21,14 @@ const router: IRouter = Router();
 function parseId(param: string | string[]): number {
   const raw = Array.isArray(param) ? param[0] : param;
   return parseInt(raw, 10);
+}
+
+function computeImageHash(imageBase64: string | null | undefined): string | null {
+  if (!imageBase64) return null;
+  const match = imageBase64.match(/^data:[^;]+;base64,(.+)$/);
+  const raw = (match ? match[1] : imageBase64).trim();
+  if (!raw) return null;
+  return createHash("sha256").update(raw).digest("hex");
 }
 
 async function getInvoiceWithItems(id: number) {
@@ -300,6 +309,68 @@ router.get("/invoices/export", async (req, res): Promise<void> => {
   });
 });
 
+router.post("/invoices/check-duplicate", async (req, res): Promise<void> => {
+  const body = (req.body ?? {}) as {
+    imageBase64?: string | null;
+    supplier?: string | null;
+    invoiceNumber?: string | null;
+    date?: string | null;
+    totalAmount?: number | null;
+    excludeId?: number | null;
+  };
+
+  const imageHash = computeImageHash(body.imageBase64 ?? null);
+  const supplierNorm = body.supplier?.trim().toLowerCase() ?? "";
+  const numberNorm = body.invoiceNumber?.trim().toLowerCase() ?? "";
+
+  const orParts = [];
+  if (imageHash) orParts.push(eq(invoicesTable.imageHash, imageHash));
+  if (supplierNorm && numberNorm) {
+    orParts.push(
+      and(
+        sql`LOWER(TRIM(${invoicesTable.supplier})) = ${supplierNorm}`,
+        sql`LOWER(TRIM(COALESCE(${invoicesTable.invoiceNumber}, ''))) = ${numberNorm}`
+      )!
+    );
+  }
+
+  if (orParts.length === 0) {
+    res.json({ duplicates: [] });
+    return;
+  }
+
+  const whereExpr = body.excludeId
+    ? and(or(...orParts), ne(invoicesTable.id, body.excludeId))
+    : or(...orParts);
+
+  const rows = await db
+    .select({
+      id: invoicesTable.id,
+      supplier: invoicesTable.supplier,
+      invoiceNumber: invoicesTable.invoiceNumber,
+      date: invoicesTable.date,
+      totalAmount: invoicesTable.totalAmount,
+      createdAt: invoicesTable.createdAt,
+      imageHash: invoicesTable.imageHash,
+    })
+    .from(invoicesTable)
+    .where(whereExpr)
+    .orderBy(desc(invoicesTable.createdAt))
+    .limit(5);
+
+  const duplicates = rows.map((r) => ({
+    id: r.id,
+    supplier: r.supplier,
+    invoiceNumber: r.invoiceNumber,
+    date: r.date,
+    totalAmount: r.totalAmount ? parseFloat(r.totalAmount) : null,
+    createdAt: r.createdAt.toISOString(),
+    matchType: (imageHash && r.imageHash === imageHash ? "image" : "content") as "image" | "content",
+  }));
+
+  res.json({ duplicates });
+});
+
 router.post("/invoices", async (req, res): Promise<void> => {
   const parsed = CreateInvoiceBody.safeParse(req.body);
   if (!parsed.success) {
@@ -307,12 +378,14 @@ router.post("/invoices", async (req, res): Promise<void> => {
     return;
   }
 
-  const { items, ...invoiceData } = parsed.data;
+  const { items, imageHash: _ignoredHash, ...invoiceData } = parsed.data;
+  const computedHash = computeImageHash(invoiceData.imageBase64 ?? null);
 
   const [invoice] = await db
     .insert(invoicesTable)
     .values({
       ...invoiceData,
+      imageHash: computedHash,
       totalAmount: invoiceData.totalAmount != null ? String(invoiceData.totalAmount) : null,
     })
     .returning();

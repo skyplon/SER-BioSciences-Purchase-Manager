@@ -39,6 +39,7 @@ export const ListInvoicesResponseItem = zod.object({
   category: zod.string(),
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
+  imageHash: zod.string().nullish(),
   description: zod.string().nullish(),
   notes: zod.string().nullish(),
   buyer: zod.string().nullish(),
@@ -138,6 +139,7 @@ export const GetInvoiceSummaryResponse = zod.object({
       category: zod.string(),
       totalAmount: zod.number().nullish(),
       imageBase64: zod.string().nullish(),
+      imageHash: zod.string().nullish(),
       description: zod.string().nullish(),
       notes: zod.string().nullish(),
       buyer: zod.string().nullish(),
@@ -203,6 +205,7 @@ export const GetInvoiceResponse = zod.object({
   category: zod.string(),
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
+  imageHash: zod.string().nullish(),
   description: zod.string().nullish(),
   notes: zod.string().nullish(),
   buyer: zod.string().nullish(),
@@ -263,6 +266,7 @@ export const UpdateInvoiceResponse = zod.object({
   category: zod.string(),
   totalAmount: zod.number().nullish(),
   imageBase64: zod.string().nullish(),
+  imageHash: zod.string().nullish(),
   description: zod.string().nullish(),
   notes: zod.string().nullish(),
   buyer: zod.string().nullish(),
@@ -309,6 +313,32 @@ export const ListInvoiceItemsResponseItem = zod.object({
   totalPrice: zod.number().nullish(),
 });
 export const ListInvoiceItemsResponse = zod.array(ListInvoiceItemsResponseItem);
+
+/**
+ * @summary Check whether an invoice being prepared duplicates an existing one
+ */
+export const CheckInvoiceDuplicateBody = zod.object({
+  imageBase64: zod.string().nullish(),
+  supplier: zod.string().nullish(),
+  invoiceNumber: zod.string().nullish(),
+  date: zod.string().nullish(),
+  totalAmount: zod.number().nullish(),
+  excludeId: zod.number().nullish(),
+});
+
+export const CheckInvoiceDuplicateResponse = zod.object({
+  duplicates: zod.array(
+    zod.object({
+      id: zod.number(),
+      supplier: zod.string(),
+      invoiceNumber: zod.string().nullish(),
+      date: zod.string().nullish(),
+      totalAmount: zod.number().nullish(),
+      createdAt: zod.string(),
+      matchType: zod.enum(["image", "content"]),
+    }),
+  ),
+});
 
 /**
  * @summary Extract invoice data from image using AI
