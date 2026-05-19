@@ -197,6 +197,10 @@ export interface AppNotification {
   createdAt: string;
 }
 
+export interface UserRole {
+  isAdmin: boolean;
+}
+
 /**
  * @nullable
  */

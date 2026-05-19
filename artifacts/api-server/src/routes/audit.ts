@@ -2,8 +2,16 @@ import { Router, type IRouter } from "express";
 import { and, desc, eq, gte, lte, sql, count } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import { db, auditLogsTable } from "@workspace/db";
+import { requireAdmin, isAdmin } from "../lib/audit.js";
 
 const router: IRouter = Router();
+
+router.get("/me/role", async (req, res): Promise<void> => {
+  const admin = await isAdmin(req);
+  res.json({ isAdmin: admin });
+});
+
+router.use("/audit-logs", requireAdmin);
 
 router.get("/audit-logs", async (req, res): Promise<void> => {
   const { search, action, entityType, entityId, userId, startDate, endDate, limit } = req.query;

@@ -33,4 +33,5 @@ export * from "./monthSummary";
 export * from "./supplierStats";
 export * from "./supplierSummary";
 export * from "./updateInvoiceBody";
+export * from "./userRole";
 export * from "./validateInvoiceBody";

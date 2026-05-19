@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useClerk, useUser } from "@clerk/react";
 import { useT } from "@/lib/i18n";
 import { NotificationBell } from "@/components/notification-bell";
+import { useIsAdmin } from "@/lib/use-is-admin";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -49,6 +50,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const { signOut } = useClerk();
   const t = useT();
+  const { isAdmin } = useIsAdmin();
 
   const navItems = [
     { href: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
@@ -59,7 +61,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   const bottomNavItems = [
-    { href: "/audit", label: t("nav.audit"), icon: Activity },
+    ...(isAdmin ? [{ href: "/audit", label: t("nav.audit"), icon: Activity }] : []),
     { href: "/settings", label: t("nav.settings"), icon: Settings },
   ];
 

@@ -382,6 +382,13 @@ export const ValidateInvoiceDataResponse = zod.object({
 });
 
 /**
+ * @summary Get current user's role flags
+ */
+export const GetMyRoleResponse = zod.object({
+  isAdmin: zod.boolean(),
+});
+
+/**
  * @summary List audit log entries
  */
 export const ListAuditLogsQueryParams = zod.object({

@@ -33,6 +33,7 @@ import type {
   ListNotificationsParams,
   SupplierStats,
   UpdateInvoiceBody,
+  UserRole,
   ValidateInvoiceBody,
 } from "./api.schemas";
 
@@ -1139,6 +1140,71 @@ export const useValidateInvoiceData = <
 > => {
   return useMutation(getValidateInvoiceDataMutationOptions(options));
 };
+
+/**
+ * @summary Get current user's role flags
+ */
+export const getGetMyRoleUrl = () => {
+  return `/api/me/role`;
+};
+
+export const getMyRole = async (options?: RequestInit): Promise<UserRole> => {
+  return customFetch<UserRole>(getGetMyRoleUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyRoleQueryKey = () => {
+  return [`/api/me/role`] as const;
+};
+
+export const getGetMyRoleQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyRole>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getMyRole>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyRoleQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyRole>>> = ({
+    signal,
+  }) => getMyRole({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyRole>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyRoleQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyRole>>
+>;
+export type GetMyRoleQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get current user's role flags
+ */
+
+export function useGetMyRole<
+  TData = Awaited<ReturnType<typeof getMyRole>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getMyRole>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyRoleQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List audit log entries

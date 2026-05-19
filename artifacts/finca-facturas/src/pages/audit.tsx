@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/select";
 import {
   Activity, Filter, Download, Plus, Pencil, Trash2, FileDown, RefreshCw,
-  Sparkles, X, User as UserIcon, Calendar as CalendarIcon, Loader2,
+  Sparkles, X, User as UserIcon, Calendar as CalendarIcon, Loader2, ShieldOff,
 } from "lucide-react";
 import { useSettings } from "@/contexts/settings-context";
+import { useIsAdmin } from "@/lib/use-is-admin";
 
 type AuditLog = {
   id: number;
@@ -135,8 +136,13 @@ export function AuditPage() {
     return p;
   }, [search, action, entityType, userId, startDate, endDate]);
 
-  const { data: logs, isLoading, refetch } = useListAuditLogs(params);
-  const { data: stats } = useGetAuditLogStats();
+  const { isAdmin, isLoading: roleLoading } = useIsAdmin();
+  const { data: logs, isLoading, refetch } = useListAuditLogs(params, {
+    query: { enabled: isAdmin },
+  });
+  const { data: stats } = useGetAuditLogStats(undefined, {
+    query: { enabled: isAdmin },
+  } as never);
   const [exporting, setExporting] = useState(false);
 
   const hasFilters = search || action !== "all" || entityType !== "all" || userId !== "all" || startDate || endDate;
@@ -160,6 +166,30 @@ export function AuditPage() {
       setExporting(false);
     }
   };
+
+  if (roleLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="max-w-md mx-auto mt-20">
+        <Card>
+          <CardContent className="pt-8 pb-8 flex flex-col items-center text-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center">
+              <ShieldOff className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+            </div>
+            <h3 className="text-lg font-semibold">{t("audit.accessDeniedTitle")}</h3>
+            <p className="text-sm text-muted-foreground">{t("audit.accessDeniedBody")}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

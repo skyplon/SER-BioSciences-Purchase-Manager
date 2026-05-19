@@ -111,6 +111,8 @@ const translations = {
 
     "audit.title": "Registro de Auditoría",
     "audit.subtitle": "Historial completo de actividad y cambios",
+    "audit.accessDeniedTitle": "Acceso restringido",
+    "audit.accessDeniedBody": "Esta sección está disponible únicamente para administradores. Si necesitas acceso, contacta al administrador del sistema.",
     "audit.exportExcel": "Exportar Excel",
     "audit.statTotal": "Total Eventos",
     "audit.stat24h": "Últimas 24h",
@@ -425,6 +427,8 @@ const translations = {
 
     "audit.title": "Audit Log",
     "audit.subtitle": "Complete history of activity and changes",
+    "audit.accessDeniedTitle": "Access restricted",
+    "audit.accessDeniedBody": "This section is only available to administrators. If you need access, contact your system administrator.",
     "audit.exportExcel": "Export Excel",
     "audit.statTotal": "Total Events",
     "audit.stat24h": "Last 24h",

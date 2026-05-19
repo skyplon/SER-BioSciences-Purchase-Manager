@@ -1,7 +1,64 @@
-import type { Request } from "express";
+import type { Request, Response, NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { db, auditLogsTable } from "@workspace/db";
 import { logger } from "./logger.js";
+
+function getAdminEmails(): string[] {
+  const raw = process.env["ADMIN_EMAILS"] ?? "";
+  return raw.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+}
+
+export async function isAdmin(req: Request): Promise<boolean> {
+  const auth = getAuth(req);
+  if (!auth?.userId) return false;
+
+  const claims = auth.sessionClaims as { publicMetadata?: { role?: string } } | undefined;
+  const claimRole = claims?.publicMetadata?.role;
+  if (claimRole === "admin") return true;
+
+  const user = await resolveUserInfo(req);
+  if (!user) return false;
+
+  try {
+    const fullUser = await clerkClient.users.getUser(user.userId);
+    const meta = fullUser.publicMetadata as { role?: string } | undefined;
+    if (meta?.role === "admin") return true;
+  } catch (err) {
+    logger.warn({ err, userId: user.userId }, "Failed to fetch Clerk user for admin check");
+  }
+
+  const adminEmails = getAdminEmails();
+  if (user.userEmail && adminEmails.includes(user.userEmail.toLowerCase())) return true;
+
+  return false;
+}
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  isAdmin(req)
+    .then(async (ok) => {
+      if (ok) {
+        next();
+        return;
+      }
+      const user = await resolveUserInfo(req).catch(() => null);
+      logger.warn({ userId: user?.userId, userEmail: user?.userEmail, path: req.path }, "Admin access denied");
+      try {
+        await logAudit(req, {
+          action: "access_denied",
+          entityType: "audit",
+          entityLabel: req.path,
+          metadata: { path: req.path, method: req.method },
+        });
+      } catch {
+        // already logged inside logAudit
+      }
+      res.status(403).json({ error: "Acceso denegado: se requiere rol de administrador" });
+    })
+    .catch((err: unknown) => {
+      logger.error({ err }, "requireAdmin middleware failed");
+      res.status(500).json({ error: "Error de autorización" });
+    });
+}
 
 type UserInfo = {
   userId: string;
