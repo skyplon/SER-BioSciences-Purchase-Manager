@@ -41,6 +41,7 @@ import {
 import { PlusCircle, Download, Trash2, Eye, Search, X, ChevronUp, ChevronDown, ChevronsUpDown, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
+import { useMyRole } from "@/lib/use-my-role";
 
 type ColKey = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount" | "createdAt" | "updatedAt" | "createdBy" | "updatedBy";
 type SortField = "date" | "supplier" | "invoiceNumber" | "category" | "totalAmount" | "createdAt" | "updatedAt";
@@ -73,6 +74,7 @@ function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: 
 
 export function InvoicesList() {
   const t = useT();
+  const { isEditor } = useMyRole();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { getToken } = useAuth();
@@ -331,12 +333,14 @@ export function InvoicesList() {
             <Download className="h-4 w-4 mr-2" />
             {t("invoices.exportExcel")}
           </Button>
-          <Link href="/invoices/new">
-            <Button data-testid="button-new-invoice">
-              <PlusCircle className="h-4 w-4 mr-2" />
-              {t("invoices.newInvoice")}
-            </Button>
-          </Link>
+          {isEditor && (
+            <Link href="/invoices/new">
+              <Button data-testid="button-new-invoice">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                {t("invoices.newInvoice")}
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -411,15 +415,17 @@ export function InvoicesList() {
               <Download className="h-3.5 w-3.5 mr-1.5" />
               {t("invoices.bulkExportSelected")}
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowBulkDeleteDialog(true)}
-              data-testid="button-delete-selected"
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              {t("invoices.bulkDeleteSelected")}
-            </Button>
+            {isEditor && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowBulkDeleteDialog(true)}
+                data-testid="button-delete-selected"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                {t("invoices.bulkDeleteSelected")}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -443,7 +449,7 @@ export function InvoicesList() {
           <p className="text-muted-foreground text-sm">
             {hasFilters ? t("invoices.noInvoicesFiltered") : t("invoices.noInvoices")}
           </p>
-          {!hasFilters && (
+          {!hasFilters && isEditor && (
             <Link href="/invoices/new">
               <Button className="mt-4" size="sm" data-testid="button-first-invoice-list">
                 <PlusCircle className="h-4 w-4 mr-2" />
@@ -510,15 +516,17 @@ export function InvoicesList() {
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => setDeleteId(inv.id)}
-                          data-testid={`button-delete-invoice-${inv.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isEditor && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeleteId(inv.id)}
+                            data-testid={`button-delete-invoice-${inv.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

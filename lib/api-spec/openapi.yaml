@@ -300,6 +300,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserRole"
 
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all workspace users (admin only)
+      responses:
+        "200":
+          description: All users with their effective role
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppUser"
+
+  /users/{id}/role:
+    patch:
+      operationId: updateUserRole
+      tags: [users]
+      summary: Update a user's role (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRoleBody"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUser"
+
   /audit-logs:
     get:
       operationId: listAuditLogs
@@ -751,11 +790,38 @@ components:
         - name
         - description
 
+    Role:
+      type: string
+      enum: [viewer, editor, admin]
+
     UserRole:
       type: object
-      required: [isAdmin]
+      required: [role, actualRole, isAdmin, isEditor, isImpersonating]
       properties:
-        isAdmin: { type: boolean }
+        role: { $ref: "#/components/schemas/Role" }
+        actualRole: { $ref: "#/components/schemas/Role" }
+        isAdmin: { type: boolean, description: "True only for actual admins (not affected by impersonation)" }
+        isEditor: { type: boolean, description: "True when the effective role can write (editor or admin)" }
+        isImpersonating: { type: boolean }
+
+    AppUser:
+      type: object
+      required: [id, role, isAdminBootstrap]
+      properties:
+        id: { type: string }
+        email: { type: ["string", "null"] }
+        name: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        role: { $ref: "#/components/schemas/Role" }
+        isAdminBootstrap: { type: boolean, description: "True when admin via ADMIN_EMAILS (cannot be downgraded)" }
+        createdAt: { type: ["string", "null"] }
+        lastSignInAt: { type: ["string", "null"] }
+
+    UpdateUserRoleBody:
+      type: object
+      required: [role]
+      properties:
+        role: { $ref: "#/components/schemas/Role" }
 
     AuditLog:
       type: object

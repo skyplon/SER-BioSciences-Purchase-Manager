@@ -10,6 +10,7 @@ import { PlusCircle, FileText, TrendingUp, ShoppingBag, Layers } from "lucide-re
 import { CATEGORIES } from "@/lib/categories";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/contexts/settings-context";
+import { useMyRole } from "@/lib/use-my-role";
 import {
   ResponsiveContainer,
   BarChart,
@@ -58,6 +59,7 @@ function DonutTooltip({ active, payload }: { active?: boolean; payload?: { name:
 
 export function Dashboard() {
   const t = useT();
+  const { isEditor } = useMyRole();
   const { language } = useSettings();
   const locale = language === "es" ? "es-CO" : "en-US";
 
@@ -129,12 +131,14 @@ export function Dashboard() {
           <h2 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h2>
           <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
         </div>
-        <Link href="/invoices/new">
-          <Button data-testid="button-new-invoice-dashboard">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            {t("dashboard.captureInvoice")}
-          </Button>
-        </Link>
+        {isEditor && (
+          <Link href="/invoices/new">
+            <Button data-testid="button-new-invoice-dashboard">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              {t("dashboard.captureInvoice")}
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Stat cards */}
@@ -366,12 +370,14 @@ export function Dashboard() {
             <div className="py-8 text-center">
               <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">{t("dashboard.noInvoices")}</p>
-              <Link href="/invoices/new">
-                <Button className="mt-3" size="sm" data-testid="button-first-invoice">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  {t("dashboard.firstInvoice")}
-                </Button>
-              </Link>
+              {isEditor && (
+                <Link href="/invoices/new">
+                  <Button className="mt-3" size="sm" data-testid="button-first-invoice">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    {t("dashboard.firstInvoice")}
+                  </Button>
+                </Link>
+              )}
             </div>
           ) : (
             <div className="space-y-1" data-testid="list-recent-invoices">

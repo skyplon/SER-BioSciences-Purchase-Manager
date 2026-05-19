@@ -232,11 +232,15 @@ export function InvoiceNew() {
       scheduleAiStep(3, 2000);
       scheduleAiStep(4, 5000);
       const token = await getToken();
+      const impersonateRole = (() => {
+        try { return window.localStorage.getItem("finca:impersonateRole"); } catch { return null; }
+      })();
       const response = await fetch("/api/ocr/extract-text", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(impersonateRole ? { "X-Impersonate-Role": impersonateRole } : {}),
         },
         body: JSON.stringify({ text }),
       });

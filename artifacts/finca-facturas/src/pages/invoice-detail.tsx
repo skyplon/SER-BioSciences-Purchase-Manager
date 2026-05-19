@@ -41,9 +41,11 @@ import {
 import { ArrowLeft, Trash2, Calendar, Hash, Store, FileText, User, AlignLeft, Download, Pencil, Check, X, Plus, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useT } from "@/lib/i18n";
+import { useMyRole } from "@/lib/use-my-role";
 
 export function InvoiceDetail() {
   const t = useT();
+  const { isEditor } = useMyRole();
   const { user } = useUser();
   const [, params] = useRoute("/invoices/:id");
   const [, setLocation] = useLocation();
@@ -247,14 +249,17 @@ export function InvoiceDetail() {
                 <Printer className="h-4 w-4 mr-2" />
                 {t("invoiceDetail.print")}
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleEditStart}
-                data-testid="button-edit-invoice"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
+              {isEditor && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleEditStart}
+                  data-testid="button-edit-invoice"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              {isEditor && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" size="icon" className="text-destructive hover:text-destructive" data-testid="button-delete-invoice-detail">
@@ -281,6 +286,7 @@ export function InvoiceDetail() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              )}
             </>
           )}
         </div>

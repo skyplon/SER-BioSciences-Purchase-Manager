@@ -1,8 +1,11 @@
 import { Router, type IRouter } from "express";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { ExtractInvoiceDataBody, ValidateInvoiceDataBody } from "@workspace/api-zod";
+import { requireRole } from "../lib/roles.js";
 
 const router: IRouter = Router();
+
+router.use(/^\/ocr/, requireRole("editor"));
 
 const ITEM_JSON = `{
       "name": "nombre estandarizado corto del artículo (ej: 'Jeringa Desechable 5ml', 'Cemento Gris 50kg', 'Ivermectina 1%')",

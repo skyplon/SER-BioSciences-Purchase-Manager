@@ -1,10 +1,7 @@
-import { useGetMyRole } from "@workspace/api-client-react";
-import { useAuth } from "@clerk/react";
+// Back-compat shim that delegates to useMyRole.
+import { useMyRole } from "./use-my-role";
 
 export function useIsAdmin(): { isAdmin: boolean; isLoading: boolean } {
-  const { isSignedIn } = useAuth();
-  const { data, isLoading } = useGetMyRole({
-    query: { enabled: !!isSignedIn, staleTime: 60_000 },
-  });
-  return { isAdmin: !!data?.isAdmin, isLoading };
+  const { isAdmin, isLoading } = useMyRole();
+  return { isAdmin, isLoading };
 }

@@ -17,7 +17,18 @@ import { SuppliersPage } from "@/pages/suppliers";
 import { CalendarPage } from "@/pages/calendar";
 import NotFound from "@/pages/not-found";
 import { SettingsProvider } from "@/contexts/settings-context";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setExtraHeadersGetter } from "@workspace/api-client-react";
+import { getImpersonateRole, useMyRole } from "@/lib/use-my-role";
+import { RolesPage } from "@/pages/admin-roles";
+
+function EditorGuard(Component: React.ComponentType): React.ComponentType {
+  return function Guarded() {
+    const { isEditor, isLoading } = useMyRole();
+    if (isLoading) return null;
+    if (!isEditor) return <Redirect to="/" />;
+    return <Component />;
+  };
+}
 
 const queryClient = new QueryClient();
 
@@ -136,7 +147,16 @@ function ClerkAuthSync() {
 
   useEffect(() => {
     setAuthTokenGetter(() => getToken());
-    return () => { setAuthTokenGetter(null); };
+    setExtraHeadersGetter(() => {
+      const r = getImpersonateRole();
+      const headers: Record<string, string> = {};
+      if (r) headers["X-Impersonate-Role"] = r;
+      return headers;
+    });
+    return () => {
+      setAuthTokenGetter(null);
+      setExtraHeadersGetter(null);
+    };
   }, [getToken]);
 
   return null;
@@ -169,12 +189,13 @@ function AuthGuard() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/invoices" component={InvoicesList} />
-            <Route path="/invoices/new" component={InvoiceNew} />
+            <Route path="/invoices/new" component={EditorGuard(InvoiceNew)} />
             <Route path="/invoices/:id" component={InvoiceDetail} />
             <Route path="/suppliers" component={SuppliersPage} />
             <Route path="/calendar" component={CalendarPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route path="/audit" component={AuditPage} />
+            <Route path="/admin/roles" component={RolesPage} />
             <Route component={NotFound} />
           </Switch>
         </Layout>

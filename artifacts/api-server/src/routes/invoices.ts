@@ -15,8 +15,11 @@ import ExcelJS from "exceljs";
 import { syncInvoiceToNotion } from "../lib/notion.js";
 import { buildInvoiceImageUrl } from "../lib/imageUpload.js";
 import { logAudit, diffSnapshots } from "../lib/audit.js";
+import { requireRole } from "../lib/roles.js";
 
 const router: IRouter = Router();
+
+const requireEditor = requireRole("editor");
 
 function parseId(param: string | string[]): number {
   const raw = Array.isArray(param) ? param[0] : param;
@@ -170,7 +173,7 @@ router.get("/invoices/summary", async (_req, res): Promise<void> => {
   });
 });
 
-router.post("/invoices/bulk-delete", async (req, res): Promise<void> => {
+router.post("/invoices/bulk-delete", requireEditor, async (req, res): Promise<void> => {
   const body = req.body as { ids?: unknown };
   if (!Array.isArray(body.ids) || body.ids.length === 0) {
     res.status(400).json({ error: "ids must be a non-empty array" });
@@ -371,7 +374,7 @@ router.post("/invoices/check-duplicate", async (req, res): Promise<void> => {
   res.json({ duplicates });
 });
 
-router.post("/invoices", async (req, res): Promise<void> => {
+router.post("/invoices", requireEditor, async (req, res): Promise<void> => {
   const parsed = CreateInvoiceBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -492,7 +495,7 @@ router.get("/invoices/:id", async (req, res): Promise<void> => {
   res.json(result);
 });
 
-router.patch("/invoices/:id", async (req, res): Promise<void> => {
+router.patch("/invoices/:id", requireEditor, async (req, res): Promise<void> => {
   const params = UpdateInvoiceParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -601,7 +604,7 @@ router.patch("/invoices/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.delete("/invoices/:id", async (req, res): Promise<void> => {
+router.delete("/invoices/:id", requireEditor, async (req, res): Promise<void> => {
   const params = DeleteInvoiceParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

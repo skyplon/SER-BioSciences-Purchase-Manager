@@ -239,8 +239,43 @@ export interface AppNotification {
   createdAt: string;
 }
 
+export type Role = (typeof Role)[keyof typeof Role];
+
+export const Role = {
+  viewer: "viewer",
+  editor: "editor",
+  admin: "admin",
+} as const;
+
 export interface UserRole {
+  role: Role;
+  actualRole: Role;
+  /** True only for actual admins (not affected by impersonation) */
   isAdmin: boolean;
+  /** True when the effective role can write (editor or admin) */
+  isEditor: boolean;
+  isImpersonating: boolean;
+}
+
+export interface AppUser {
+  id: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
+  role: Role;
+  /** True when admin via ADMIN_EMAILS (cannot be downgraded) */
+  isAdminBootstrap: boolean;
+  /** @nullable */
+  createdAt?: string | null;
+  /** @nullable */
+  lastSignInAt?: string | null;
+}
+
+export interface UpdateUserRoleBody {
+  role: Role;
 }
 
 /**

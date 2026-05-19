@@ -5,6 +5,7 @@ import invoicesRouter from "./invoices";
 import notificationsRouter from "./notifications";
 import ocrRouter from "./ocr";
 import auditRouter from "./audit";
+import usersRouter from "./users";
 
 const router: IRouter = Router();
 
@@ -23,5 +24,6 @@ router.use(invoicesRouter);
 router.use(notificationsRouter);
 router.use(ocrRouter);
 router.use(auditRouter);
+router.use(usersRouter);
 
 export default router;

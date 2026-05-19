@@ -326,6 +326,32 @@ const translations = {
     "common.back": "Volver",
     "common.search": "Buscar...",
     "common.noResults": "Sin resultados",
+
+    "nav.roles": "Roles y Permisos",
+    "roles.title": "Roles y Permisos",
+    "roles.subtitle": "Asigna permisos a los usuarios del espacio de trabajo.",
+    "roles.admin": "Administrador",
+    "roles.editor": "Editor",
+    "roles.viewer": "Lectura",
+    "roles.adminOnly": "Solo administradores pueden acceder a esta página.",
+    "roles.searchPlaceholder": "Buscar por nombre o correo...",
+    "roles.countLabel": "Usuarios",
+    "roles.unnamed": "(Sin nombre)",
+    "roles.loadError": "No se pudieron cargar los usuarios",
+    "roles.bootstrap": "Admin por configuración del sistema",
+    "roles.confirmTitle": "¿Cambiar rol del usuario?",
+    "roles.confirmDesc": "Vas a cambiar el rol de {name} de {from} a {to}. Este cambio aplica inmediatamente.",
+    "roles.confirmApply": "Aplicar cambio",
+    "roles.updated": "Rol actualizado",
+    "roles.updateFailed": "No se pudo actualizar el rol",
+
+    "impersonate.title": "Probar como",
+    "impersonate.actualRole": "Tu rol",
+    "impersonate.bannerPrefix": "Estás navegando como",
+    "impersonate.bannerSuffix": "para probar permisos.",
+    "impersonate.stop": "Salir del modo prueba",
+    "impersonate.none": "Sin impersonar",
+    "viewerHint.readonly": "Solo lectura — pide a un administrador que te asigne permisos de edición.",
   },
   en: {
     "nav.dashboard": "Dashboard",
@@ -652,10 +678,36 @@ const translations = {
     "common.back": "Back",
     "common.search": "Search...",
     "common.noResults": "No results",
+
+    "nav.roles": "Roles & Permissions",
+    "roles.title": "Roles & Permissions",
+    "roles.subtitle": "Assign permissions to people in the workspace.",
+    "roles.admin": "Admin",
+    "roles.editor": "Editor",
+    "roles.viewer": "Viewer",
+    "roles.adminOnly": "Only admins can access this page.",
+    "roles.searchPlaceholder": "Search by name or email...",
+    "roles.countLabel": "Users",
+    "roles.unnamed": "(No name)",
+    "roles.loadError": "Failed to load users",
+    "roles.bootstrap": "Admin by system config",
+    "roles.confirmTitle": "Change user role?",
+    "roles.confirmDesc": "You are about to change {name}'s role from {from} to {to}. This applies immediately.",
+    "roles.confirmApply": "Apply change",
+    "roles.updated": "Role updated",
+    "roles.updateFailed": "Couldn't update role",
+
+    "impersonate.title": "Test as",
+    "impersonate.actualRole": "Your role",
+    "impersonate.bannerPrefix": "You are browsing as",
+    "impersonate.bannerSuffix": "to test permissions.",
+    "impersonate.stop": "Exit test mode",
+    "impersonate.none": "Stop impersonating",
+    "viewerHint.readonly": "Read-only — ask an admin to grant you edit permissions.",
   },
 } as const;
 
-type TransKey = keyof typeof translations.es;
+export type TransKey = keyof typeof translations.es;
 
 export function useT() {
   const { language } = useSettings();

@@ -2,35 +2,18 @@ import type { Request, Response, NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { db, auditLogsTable } from "@workspace/db";
 import { logger } from "./logger.js";
+import { getEffectiveRole } from "./roles.js";
+// `getAuth` is used in resolveUserInfo below; clerkClient too.
+void getAuth;
+void clerkClient;
 
-function getAdminEmails(): string[] {
-  const raw = process.env["ADMIN_EMAILS"] ?? "";
-  return raw.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-}
-
+/**
+ * Back-compat helper: returns true when the EFFECTIVE role is admin. While
+ * impersonating, an actual admin will not pass this check.
+ */
 export async function isAdmin(req: Request): Promise<boolean> {
-  const auth = getAuth(req);
-  if (!auth?.userId) return false;
-
-  const claims = auth.sessionClaims as { publicMetadata?: { role?: string } } | undefined;
-  const claimRole = claims?.publicMetadata?.role;
-  if (claimRole === "admin") return true;
-
-  const user = await resolveUserInfo(req);
-  if (!user) return false;
-
-  try {
-    const fullUser = await clerkClient.users.getUser(user.userId);
-    const meta = fullUser.publicMetadata as { role?: string } | undefined;
-    if (meta?.role === "admin") return true;
-  } catch (err) {
-    logger.warn({ err, userId: user.userId }, "Failed to fetch Clerk user for admin check");
-  }
-
-  const adminEmails = getAdminEmails();
-  if (user.userEmail && adminEmails.includes(user.userEmail.toLowerCase())) return true;
-
-  return false;
+  const eff = await getEffectiveRole(req);
+  return eff.effective === "admin";
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {

@@ -2,13 +2,20 @@ import { Router, type IRouter } from "express";
 import { and, desc, eq, gte, lte, sql, count } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import { db, auditLogsTable } from "@workspace/db";
-import { requireAdmin, isAdmin } from "../lib/audit.js";
+import { requireAdmin } from "../lib/audit.js";
+import { getEffectiveRole } from "../lib/roles.js";
 
 const router: IRouter = Router();
 
 router.get("/me/role", async (req, res): Promise<void> => {
-  const admin = await isAdmin(req);
-  res.json({ isAdmin: admin });
+  const eff = await getEffectiveRole(req);
+  res.json({
+    role: eff.effective,
+    actualRole: eff.actual,
+    isAdmin: eff.actual === "admin",
+    isEditor: eff.effective === "editor" || eff.effective === "admin",
+    isImpersonating: eff.isImpersonating,
+  });
 });
 
 router.use("/audit-logs", requireAdmin);

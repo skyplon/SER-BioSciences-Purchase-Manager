@@ -8,6 +8,8 @@ export type BodyType<T> = T;
 
 export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
+export type ExtraHeadersGetter = () => Promise<Record<string, string>> | Record<string, string>;
+
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
@@ -17,6 +19,16 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _extraHeadersGetter: ExtraHeadersGetter | null = null;
+
+/**
+ * Register a getter that supplies extra headers added to every outgoing
+ * request. Useful for things like impersonation headers controlled by the
+ * client UI. Pass `null` to clear.
+ */
+export function setExtraHeadersGetter(getter: ExtraHeadersGetter | null): void {
+  _extraHeadersGetter = getter;
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -355,6 +367,13 @@ export async function customFetch<T = unknown>(
     const token = await _authTokenGetter();
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
+    }
+  }
+
+  if (_extraHeadersGetter) {
+    const extra = await _extraHeadersGetter();
+    for (const [k, v] of Object.entries(extra)) {
+      if (v != null && !headers.has(k)) headers.set(k, v);
     }
   }
 

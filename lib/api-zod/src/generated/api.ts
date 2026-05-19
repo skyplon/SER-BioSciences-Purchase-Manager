@@ -415,7 +415,56 @@ export const ValidateInvoiceDataResponse = zod.object({
  * @summary Get current user's role flags
  */
 export const GetMyRoleResponse = zod.object({
-  isAdmin: zod.boolean(),
+  role: zod.enum(["viewer", "editor", "admin"]),
+  actualRole: zod.enum(["viewer", "editor", "admin"]),
+  isAdmin: zod
+    .boolean()
+    .describe("True only for actual admins (not affected by impersonation)"),
+  isEditor: zod
+    .boolean()
+    .describe("True when the effective role can write (editor or admin)"),
+  isImpersonating: zod.boolean(),
+});
+
+/**
+ * @summary List all workspace users (admin only)
+ */
+export const ListUsersResponseItem = zod.object({
+  id: zod.string(),
+  email: zod.string().nullish(),
+  name: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  role: zod.enum(["viewer", "editor", "admin"]),
+  isAdminBootstrap: zod
+    .boolean()
+    .describe("True when admin via ADMIN_EMAILS (cannot be downgraded)"),
+  createdAt: zod.string().nullish(),
+  lastSignInAt: zod.string().nullish(),
+});
+export const ListUsersResponse = zod.array(ListUsersResponseItem);
+
+/**
+ * @summary Update a user's role (admin only)
+ */
+export const UpdateUserRoleParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateUserRoleBody = zod.object({
+  role: zod.enum(["viewer", "editor", "admin"]),
+});
+
+export const UpdateUserRoleResponse = zod.object({
+  id: zod.string(),
+  email: zod.string().nullish(),
+  name: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  role: zod.enum(["viewer", "editor", "admin"]),
+  isAdminBootstrap: zod
+    .boolean()
+    .describe("True when admin via ADMIN_EMAILS (cannot be downgraded)"),
+  createdAt: zod.string().nullish(),
+  lastSignInAt: zod.string().nullish(),
 });
 
 /**

@@ -7,6 +7,7 @@
  */
 
 export * from "./appNotification";
+export * from "./appUser";
 export * from "./auditActionCount";
 export * from "./auditDayCount";
 export * from "./auditEntityTypeCount";
@@ -34,8 +35,10 @@ export * from "./listAuditLogsParams";
 export * from "./listInvoicesParams";
 export * from "./listNotificationsParams";
 export * from "./monthSummary";
+export * from "./role";
 export * from "./supplierStats";
 export * from "./supplierSummary";
 export * from "./updateInvoiceBody";
+export * from "./updateUserRoleBody";
 export * from "./userRole";
 export * from "./validateInvoiceBody";

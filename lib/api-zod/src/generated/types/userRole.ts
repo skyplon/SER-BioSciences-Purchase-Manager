@@ -5,7 +5,14 @@
  * API specification for Gestor de Facturas Finca
  * OpenAPI spec version: 0.1.0
  */
+import type { Role } from "./role";
 
 export interface UserRole {
+  role: Role;
+  actualRole: Role;
+  /** True only for actual admins (not affected by impersonation) */
   isAdmin: boolean;
+  /** True when the effective role can write (editor or admin) */
+  isEditor: boolean;
+  isImpersonating: boolean;
 }
